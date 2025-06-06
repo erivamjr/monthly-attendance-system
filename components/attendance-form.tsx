@@ -507,7 +507,7 @@ export function AttendanceForm() {
           },
         ];
 
-        const { data: createdEmployees } = await fetch("/api/employees", {
+        const createdEmployeesData = await fetch("/api/employees", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -515,7 +515,11 @@ export function AttendanceForm() {
           body: JSON.stringify(testEmployees),
         }).then((res) => res.json());
 
-        if (!createdEmployees || createdEmployees.length === 0) {
+        const createdEmployees = Array.isArray(createdEmployeesData)
+          ? createdEmployeesData
+          : [createdEmployeesData];
+
+        if (createdEmployees.length === 0) {
           throw new Error("Erro ao criar funcionários de teste");
         }
 
@@ -566,7 +570,7 @@ export function AttendanceForm() {
           },
         ];
 
-        const { data: createdEmployees } = await fetch("/api/employees", {
+        const createdEmployeesData = await fetch("/api/employees", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -574,7 +578,11 @@ export function AttendanceForm() {
           body: JSON.stringify(testEmployees),
         }).then((res) => res.json());
 
-        if (!createdEmployees || createdEmployees.length === 0) {
+        const createdEmployees = Array.isArray(createdEmployeesData)
+          ? createdEmployeesData
+          : [createdEmployeesData];
+
+        if (createdEmployees.length === 0) {
           throw new Error("Erro ao criar funcionários de teste");
         }
 
