@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id               String           @id @default(uuid())
+  name             String
+  slug             String           @unique
+  logo_url         String?
+  units            Unit[]
+  users            User[]
+  employees        Employee[]
+  frequency_sheets FrequencySheet[]
+  event_codes      EventCode[]
+  salary_floors    SalaryFloor[]
+  logs             Log[]
+  created_at       DateTime         @default(now())
+
+  @@map("organizations")
+}
+
+model Unit {
+  id               String           @id @default(uuid())
+  name             String
+  location         String
+  organization_id  String
+  organization     Organization     @relation(fields: [organization_id], references: [id])
+  employees        Employee[]
+  users            User[]
+  frequency_sheets FrequencySheet[]
+  is_active        Boolean          @default(true)
+  created_at       DateTime         @default(now())
+
+  @@map("units")
+}
+
+model User {
+  id               String           @id @default(uuid())
+  name             String
+  email            String           @unique
+  password         String           @default("changeme123")
+  cpf              String           @unique
+  role             UserRole         @default(VIEWER)
+  organization_id  String
+  organization     Organization     @relation(fields: [organization_id], references: [id])
+  unit_id          String?
+  unit             Unit?            @relation(fields: [unit_id], references: [id])
+  submitted_sheets FrequencySheet[] @relation("SubmittedBy")
+  logs             Log[]
+  is_active        Boolean          @default(true)
+  created_at       DateTime         @default(now())
+
+  @@map("users")
+}
+
+model Employee {
+  id                String           @id @default(uuid())
+  registration      String?          @unique
+  name              String
+  position          String
+  cpf               String           @unique
+  rg                String?
+  rg_state          String?
+  contract_type     String
+  base_salary       Float?
+  address           String?
+  organization_id   String
+  organization      Organization     @relation(fields: [organization_id], references: [id])
+  unit_id           String
+  unit              Unit             @relation(fields: [unit_id], references: [id])
+  created_at        DateTime         @default(now())
+  frequency_entries FrequencyEntry[]
+
+  @@map("employees")
+}
+
+model FrequencySheet {
+  id              String           @id @default(uuid())
+  organization_id String
+  organization    Organization     @relation(fields: [organization_id], references: [id])
+  unit_id         String
+  unit            Unit             @relation(fields: [unit_id], references: [id])
+  month           Int
+  year            Int
+  status          SheetStatus      @default(DRAFT)
+  submitted_by    String?
+  submitter       User?            @relation("SubmittedBy", fields: [submitted_by], references: [id])
+  submitted_at    DateTime?
+  entries         FrequencyEntry[]
+  created_at      DateTime         @default(now())
+
+  @@map("frequency_sheets")
+}
+
+model FrequencyEntry {
+  id                     String         @id @default(uuid())
+  sheet_id               String
+  sheet                  FrequencySheet @relation(fields: [sheet_id], references: [id])
+  employee_id            String
+  employee               Employee       @relation(fields: [employee_id], references: [id])
+  absence_days           Int
+  additional_night_hours Float
+  overtime_50_hours      Float
+  overtime_100_hours     Float
+  on_call_hours          Float
+  vacation_days          Int
+  salary_floor_amount    Float?
+  justification          String?
+  created_at             DateTime       @default(now())
+
+  @@map("frequency_entries")
+}
+
+model EventType {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  label       String
+  description String?
+  event_codes EventCode[]
+  created_at  DateTime    @default(now())
+
+  @@map("event_types")
+}
+
+model EventCode {
+  id              String       @id @default(uuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  event_type_id   String
+  event_type      EventType    @relation(fields: [event_type_id], references: [id])
+  contract_type   String
+  code            Int
+  created_at      DateTime     @default(now())
+
+  @@unique([organization_id, event_type_id, contract_type])
+  @@map("event_codes")
+}
+
+model SalaryFloor {
+  id              String       @id @default(uuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  position        String
+  base_value      Float
+  hour_value      Float
+  floor_quantity  Float
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+
+  @@unique([organization_id, position])
+  @@map("salary_floors")
+}
+
+model Log {
+  id              String       @id @default(uuid())
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  user_id         String
+  user            User         @relation(fields: [user_id], references: [id])
+  action          String
+  details         Json?
+  created_at      DateTime     @default(now())
+
+  @@map("logs")
+}
+
+enum UserRole {
+  MASTER
+  ADMIN
+  COORDINATOR
+  RESPONSIBLE
+  VIEWER
+}
+
+enum SheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
