@@ -72,7 +72,7 @@ export function AttendancePreview() {
     label: format(new Date(2021, i, 1), "MMMM", { locale: ptBR }),
   }));
 
-  // Gerar array de anos (5 anos para trás e 1 para frente)
+  // Gerar array de anos (últimos 5 anos incluindo o ano atual)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => ({
     value: (currentYear - 5 + i).toString(),
