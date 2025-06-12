@@ -1,8 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,11 +6,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OrganizationForm } from "@/components/master/OrganizationForm";
-import { DeleteOrganizationDialog } from "@/components/master/DeleteOrganizationDialog";
+
 import { prisma } from "@/lib/prisma";
+import { DeleteOrganizationDialog } from "../../../components/master/DeleteOrganizationDialog";
+import { OrganizationForm } from "@/components/organization-form";
+import { OrganizationActions } from "./OrganizationActions";
 
 type Organization = {
   id: string;
@@ -54,20 +50,20 @@ export default async function OrganizationsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Organizations</h1>
-        <OrganizationForm />
+        <h1 className="text-2xl font-bold">Organizações</h1>
+        <OrganizationActions />
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Nome</TableHead>
               <TableHead>Slug</TableHead>
-              <TableHead>Units</TableHead>
-              <TableHead>Users</TableHead>
-              <TableHead>Employees</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Unidades</TableHead>
+              <TableHead>Usuários</TableHead>
+              <TableHead>Funcionários</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

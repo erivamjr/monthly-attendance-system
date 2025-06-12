@@ -74,6 +74,8 @@ export async function GET(request: Request) {
       },
     });
 
+    console.log("CONSOLANDO = ", employees);
+
     return NextResponse.json({ employees });
   } catch (error) {
     console.error("Erro ao listar servidores:", error);

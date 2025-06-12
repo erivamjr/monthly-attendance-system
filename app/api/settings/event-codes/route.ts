@@ -82,8 +82,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { organizationId, eventCodes } = body;
 
-    console.log("Received request:", { organizationId, eventCodes }); // Debug log
-
     if (!organizationId || !eventCodes) {
       return NextResponse.json(
         { error: "Organization ID and event codes are required" },
@@ -93,15 +91,8 @@ export async function POST(request: Request) {
 
     // Process each event code in sequence to avoid race conditions
     for (const eventCode of eventCodes) {
-      console.log("Processing event code:", eventCode); // Debug log
-
       // Handle statutory code
       if (eventCode.statutoryCode !== "") {
-        console.log("Upserting statutory code:", {
-          eventTypeId: eventCode.eventTypeId,
-          code: eventCode.statutoryCode,
-        });
-
         await prisma.eventCode.upsert({
           where: {
             organization_id_event_type_id_contract_type: {
@@ -124,11 +115,6 @@ export async function POST(request: Request) {
 
       // Handle contract code
       if (eventCode.contractCode !== "") {
-        console.log("Upserting contract code:", {
-          eventTypeId: eventCode.eventTypeId,
-          code: eventCode.contractCode,
-        });
-
         await prisma.eventCode.upsert({
           where: {
             organization_id_event_type_id_contract_type: {
@@ -151,11 +137,6 @@ export async function POST(request: Request) {
 
       // Handle temporary code
       if (eventCode.temporaryCode !== "") {
-        console.log("Upserting temporary code:", {
-          eventTypeId: eventCode.eventTypeId,
-          code: eventCode.temporaryCode,
-        });
-
         await prisma.eventCode.upsert({
           where: {
             organization_id_event_type_id_contract_type: {
@@ -186,8 +167,6 @@ export async function POST(request: Request) {
         event_type: true,
       },
     });
-
-    console.log("Updated codes:", updatedCodes); // Debug log
 
     return NextResponse.json({
       success: true,

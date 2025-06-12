@@ -9315,6 +9315,7 @@ export namespace Prisma {
     contract_type: string | null
     code: number | null
     created_at: Date | null
+    updated_at: Date | null
   }
 
   export type EventCodeMaxAggregateOutputType = {
@@ -9324,6 +9325,7 @@ export namespace Prisma {
     contract_type: string | null
     code: number | null
     created_at: Date | null
+    updated_at: Date | null
   }
 
   export type EventCodeCountAggregateOutputType = {
@@ -9333,6 +9335,7 @@ export namespace Prisma {
     contract_type: number
     code: number
     created_at: number
+    updated_at: number
     _all: number
   }
 
@@ -9352,6 +9355,7 @@ export namespace Prisma {
     contract_type?: true
     code?: true
     created_at?: true
+    updated_at?: true
   }
 
   export type EventCodeMaxAggregateInputType = {
@@ -9361,6 +9365,7 @@ export namespace Prisma {
     contract_type?: true
     code?: true
     created_at?: true
+    updated_at?: true
   }
 
   export type EventCodeCountAggregateInputType = {
@@ -9370,6 +9375,7 @@ export namespace Prisma {
     contract_type?: true
     code?: true
     created_at?: true
+    updated_at?: true
     _all?: true
   }
 
@@ -9466,6 +9472,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at: Date
+    updated_at: Date
     _count: EventCodeCountAggregateOutputType | null
     _avg: EventCodeAvgAggregateOutputType | null
     _sum: EventCodeSumAggregateOutputType | null
@@ -9494,6 +9501,7 @@ export namespace Prisma {
     contract_type?: boolean
     code?: boolean
     created_at?: boolean
+    updated_at?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     event_type?: boolean | EventTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["eventCode"]>
@@ -9505,6 +9513,7 @@ export namespace Prisma {
     contract_type?: boolean
     code?: boolean
     created_at?: boolean
+    updated_at?: boolean
     organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     event_type?: boolean | EventTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["eventCode"]>
@@ -9516,6 +9525,7 @@ export namespace Prisma {
     contract_type?: boolean
     code?: boolean
     created_at?: boolean
+    updated_at?: boolean
   }
 
   export type EventCodeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9540,6 +9550,7 @@ export namespace Prisma {
       contract_type: string
       code: number
       created_at: Date
+      updated_at: Date
     }, ExtArgs["result"]["eventCode"]>
     composites: {}
   }
@@ -9941,6 +9952,7 @@ export namespace Prisma {
     readonly contract_type: FieldRef<"EventCode", 'String'>
     readonly code: FieldRef<"EventCode", 'Int'>
     readonly created_at: FieldRef<"EventCode", 'DateTime'>
+    readonly updated_at: FieldRef<"EventCode", 'DateTime'>
   }
     
 
@@ -12353,7 +12365,8 @@ export namespace Prisma {
     event_type_id: 'event_type_id',
     contract_type: 'contract_type',
     code: 'code',
-    created_at: 'created_at'
+    created_at: 'created_at',
+    updated_at: 'updated_at'
   };
 
   export type EventCodeScalarFieldEnum = (typeof EventCodeScalarFieldEnum)[keyof typeof EventCodeScalarFieldEnum]
@@ -13112,6 +13125,7 @@ export namespace Prisma {
     contract_type?: StringFilter<"EventCode"> | string
     code?: IntFilter<"EventCode"> | number
     created_at?: DateTimeFilter<"EventCode"> | Date | string
+    updated_at?: DateTimeFilter<"EventCode"> | Date | string
     organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     event_type?: XOR<EventTypeRelationFilter, EventTypeWhereInput>
   }
@@ -13123,6 +13137,7 @@ export namespace Prisma {
     contract_type?: SortOrder
     code?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
     event_type?: EventTypeOrderByWithRelationInput
   }
@@ -13138,6 +13153,7 @@ export namespace Prisma {
     contract_type?: StringFilter<"EventCode"> | string
     code?: IntFilter<"EventCode"> | number
     created_at?: DateTimeFilter<"EventCode"> | Date | string
+    updated_at?: DateTimeFilter<"EventCode"> | Date | string
     organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     event_type?: XOR<EventTypeRelationFilter, EventTypeWhereInput>
   }, "id" | "organization_id_event_type_id_contract_type">
@@ -13149,6 +13165,7 @@ export namespace Prisma {
     contract_type?: SortOrder
     code?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     _count?: EventCodeCountOrderByAggregateInput
     _avg?: EventCodeAvgOrderByAggregateInput
     _max?: EventCodeMaxOrderByAggregateInput
@@ -13166,6 +13183,7 @@ export namespace Prisma {
     contract_type?: StringWithAggregatesFilter<"EventCode"> | string
     code?: IntWithAggregatesFilter<"EventCode"> | number
     created_at?: DateTimeWithAggregatesFilter<"EventCode"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"EventCode"> | Date | string
   }
 
   export type SalaryFloorWhereInput = {
@@ -13926,6 +13944,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
     organization: OrganizationCreateNestedOneWithoutEvent_codesInput
     event_type: EventTypeCreateNestedOneWithoutEvent_codesInput
   }
@@ -13937,6 +13956,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type EventCodeUpdateInput = {
@@ -13944,6 +13964,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutEvent_codesNestedInput
     event_type?: EventTypeUpdateOneRequiredWithoutEvent_codesNestedInput
   }
@@ -13955,6 +13976,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EventCodeCreateManyInput = {
@@ -13964,6 +13986,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type EventCodeUpdateManyMutationInput = {
@@ -13971,6 +13994,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EventCodeUncheckedUpdateManyInput = {
@@ -13980,6 +14004,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SalaryFloorCreateInput = {
@@ -14777,6 +14802,7 @@ export namespace Prisma {
     contract_type?: SortOrder
     code?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
   }
 
   export type EventCodeAvgOrderByAggregateInput = {
@@ -14790,6 +14816,7 @@ export namespace Prisma {
     contract_type?: SortOrder
     code?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
   }
 
   export type EventCodeMinOrderByAggregateInput = {
@@ -14799,6 +14826,7 @@ export namespace Prisma {
     contract_type?: SortOrder
     code?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
   }
 
   export type EventCodeSumOrderByAggregateInput = {
@@ -16252,6 +16280,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
     event_type: EventTypeCreateNestedOneWithoutEvent_codesInput
   }
 
@@ -16261,6 +16290,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type EventCodeCreateOrConnectWithoutOrganizationInput = {
@@ -16481,6 +16511,7 @@ export namespace Prisma {
     contract_type?: StringFilter<"EventCode"> | string
     code?: IntFilter<"EventCode"> | number
     created_at?: DateTimeFilter<"EventCode"> | Date | string
+    updated_at?: DateTimeFilter<"EventCode"> | Date | string
   }
 
   export type SalaryFloorUpsertWithWhereUniqueWithoutOrganizationInput = {
@@ -17610,6 +17641,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
     organization: OrganizationCreateNestedOneWithoutEvent_codesInput
   }
 
@@ -17619,6 +17651,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type EventCodeCreateOrConnectWithoutEvent_typeInput = {
@@ -18035,6 +18068,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type SalaryFloorCreateManyOrganizationInput = {
@@ -18212,6 +18246,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     event_type?: EventTypeUpdateOneRequiredWithoutEvent_codesNestedInput
   }
 
@@ -18221,6 +18256,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EventCodeUncheckedUpdateManyWithoutOrganizationInput = {
@@ -18229,6 +18265,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SalaryFloorUpdateWithoutOrganizationInput = {
@@ -18641,6 +18678,7 @@ export namespace Prisma {
     contract_type: string
     code: number
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type EventCodeUpdateWithoutEvent_typeInput = {
@@ -18648,6 +18686,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     organization?: OrganizationUpdateOneRequiredWithoutEvent_codesNestedInput
   }
 
@@ -18657,6 +18696,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EventCodeUncheckedUpdateManyWithoutEvent_typeInput = {
@@ -18665,6 +18705,7 @@ export namespace Prisma {
     contract_type?: StringFieldUpdateOperationsInput | string
     code?: IntFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

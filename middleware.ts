@@ -7,7 +7,7 @@ const PUBLIC_ROUTES = ["/api/check-env", "/_next", "/favicon.ico"];
 
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
-  const { pathname } = request.nextUrl;
+  const pathname = request.nextUrl.pathname;
 
   // Verifica se a rota atual é pública
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
@@ -68,9 +68,17 @@ export async function middleware(request: NextRequest) {
 
   // Role-based access control for specific routes
   const isAdmin = token.role === "ADMIN";
+  const isMaster = token.role === "MASTER";
   const isResponsible = token.role === "RESPONSIBLE";
 
-  // Routes that require admin access
+  // Routes that require master access
+  if (pathname.includes("/organizations")) {
+    if (!isMaster) {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  }
+
+  // Routes that require admin or master access
   if (
     pathname.includes("/units") ||
     pathname.includes("/users") ||
@@ -78,14 +86,21 @@ export async function middleware(request: NextRequest) {
     pathname.includes("/salary-floor") ||
     pathname.includes("/export")
   ) {
-    if (!isAdmin && token.role !== "MASTER") {
+    if (!isAdmin && !isMaster) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }
 
-  // Routes that require admin or responsible access
-  if (pathname.includes("/frequency")) {
-    if (!isAdmin && !isResponsible && token.role !== "MASTER") {
+  // Routes that require admin, responsible, or master access
+  if (pathname.includes("/sheets") || pathname.includes("/reports")) {
+    if (!isAdmin && !isMaster && !isResponsible) {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  }
+
+  // Routes that require admin or master access
+  if (pathname.includes("/settings")) {
+    if (!isAdmin && !isMaster) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }

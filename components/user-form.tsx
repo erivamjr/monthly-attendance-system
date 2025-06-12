@@ -31,6 +31,36 @@ import * as z from "zod";
 import { toast } from "@/components/ui/use-toast";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { Label } from "@/components/ui/label";
+import { Session } from "next-auth";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  logo?: string;
+}
+
+interface Unit {
+  id: string;
+  name: string;
+  organization_id: string;
+}
+
+interface ExtendedSession extends Session {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    organizationId?: string;
+    organizationSlug?: string;
+    organizationLogo?: string;
+    organizationName?: string;
+  };
+}
 
 // Função para validar CPF
 function validateCPF(cpf: string) {
@@ -78,19 +108,19 @@ const userFormSchema = z
       .min(11, "CPF inválido")
       .max(14, "CPF inválido")
       .refine((cpf) => validateCPF(cpf), "CPF inválido"),
-    role: z.enum(["admin", "responsible"]),
+    role: z.enum(["master", "admin", "coordinator"]),
     organization_id: z.string().min(1, "Organização é obrigatória"),
     unit_id: z.string().optional(),
   })
   .refine(
     (data) => {
-      if (data.role === "responsible" && !data.unit_id) {
+      if (data.role === "coordinator" && !data.unit_id) {
         return false;
       }
       return true;
     },
     {
-      message: "Unidade é obrigatória para usuários responsáveis",
+      message: "Unidade é obrigatória para usuários coordenadores",
       path: ["unit_id"],
     }
   );
@@ -100,32 +130,36 @@ type UserFormData = {
   email: string;
   cpf: string;
   password?: string;
-  role: "admin" | "responsible";
+  role: "master" | "admin" | "coordinator";
   organization_id: string;
   unit_id?: string;
 };
 
-interface UserFormProps {
+type UserFormProps = {
   isOpen: boolean;
   onClose: () => void;
-  organizations: any[];
-  isMasterView: boolean;
   onSuccess: () => void;
+  isMasterView?: boolean;
   user?: UserFormData & { id: string };
-}
+};
 
 export function UserForm({
   isOpen,
   onClose,
-  organizations,
-  isMasterView,
   onSuccess,
+  isMasterView = false,
   user,
 }: UserFormProps) {
-  const { data: session } = useSession();
-  const [units, setUnits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: session } = useSession() as { data: ExtendedSession | null };
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<
+    string | null
+  >(user?.organization_id || null);
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
@@ -133,39 +167,37 @@ export function UserForm({
       name: user?.name || "",
       email: user?.email || "",
       cpf: user?.cpf || "",
-      password: "",
-      role: user?.role || "admin",
-      organization_id: user?.organization_id || organizations[0]?.id || "",
+      role: user?.role || "coordinator",
+      organization_id: user?.organization_id || "",
       unit_id: user?.unit_id || "",
+      password: "",
     },
   });
 
-  const selectedOrganizationId = form.watch("organization_id");
   const selectedRole = form.watch("role");
+
+  // Carregar unidades da organização selecionada
+  const loadUnits = async (orgId: string) => {
+    try {
+      const response = await fetch(`/api/units?organization_id=${orgId}`);
+      if (!response.ok) throw new Error("Erro ao carregar unidades");
+      const data = await response.json();
+      setUnits(data.units);
+    } catch (error) {
+      console.error("Erro ao carregar unidades:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as unidades",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Carregar unidades quando a organização for selecionada
   useEffect(() => {
-    async function loadUnits() {
-      if (!selectedOrganizationId) return;
-
-      try {
-        const response = await fetch(
-          `/api/organizations/${selectedOrganizationId}/units`
-        );
-        if (!response.ok) throw new Error("Erro ao carregar unidades");
-        const data = await response.json();
-        setUnits(data);
-      } catch (error) {
-        console.error("Erro ao carregar unidades:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar as unidades",
-          variant: "destructive",
-        });
-      }
+    if (selectedOrganizationId) {
+      loadUnits(selectedOrganizationId);
     }
-
-    loadUnits();
   }, [selectedOrganizationId]);
 
   // Atualizar valores do formulário quando o usuário mudar
@@ -178,22 +210,53 @@ export function UserForm({
         email: "",
         cpf: "",
         password: "",
-        role: "admin",
-        organization_id: organizations[0]?.id || "",
+        role: "coordinator",
+        organization_id: "",
         unit_id: "",
       });
     }
-  }, [user, form, organizations]);
+  }, [user, form]);
 
-  async function onSubmit(data: UserFormData) {
-    setLoading(true);
+  // Carregar organizações
+  useEffect(() => {
+    const loadOrganizations = async () => {
+      if (!isMasterView) return;
+
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/organizations");
+        if (!response.ok) throw new Error("Erro ao carregar organizações");
+        const data = await response.json();
+        setOrganizations(data.organizations || []);
+      } catch (error) {
+        console.error("Erro ao carregar organizações:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar as organizações",
+          variant: "destructive",
+        });
+        setOrganizations([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOrganizations();
+  }, [isMasterView]);
+
+  const onSubmit = async (data: UserFormData) => {
+    setIsSubmitting(true);
+
     try {
       const url = user ? `/api/users/${user.id}` : "/api/users";
       const method = user ? "PUT" : "POST";
 
+      let formData = data;
+
       // Se for edição e não foi fornecida senha, remover do payload
-      if (user && !data.password) {
-        delete data.password;
+      if (user && !formData.password) {
+        const { password, ...dataWithoutPassword } = formData;
+        formData = dataWithoutPassword;
       }
 
       const response = await fetch(url, {
@@ -201,7 +264,7 @@ export function UserForm({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -210,13 +273,10 @@ export function UserForm({
 
       toast({
         title: "Sucesso",
-        description: user
-          ? "Usuário atualizado com sucesso"
-          : "Usuário cadastrado com sucesso",
+        description: `Usuário ${user ? "atualizado" : "criado"} com sucesso`,
       });
 
       onSuccess();
-      onClose();
     } catch (error) {
       console.error("Erro ao salvar usuário:", error);
       toast({
@@ -225,18 +285,19 @@ export function UserForm({
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{user ? "Editar" : "Criar"} Usuário</DialogTitle>
+          <DialogTitle>{user ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
           <DialogDescription>
-            Preencha os dados para {user ? "editar o" : "criar um novo"} usuário
-            no sistema
+            {user
+              ? "Atualize as informações do usuário"
+              : "Preencha as informações para criar um novo usuário"}
           </DialogDescription>
         </DialogHeader>
 
@@ -249,7 +310,7 @@ export function UserForm({
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome do usuário" {...field} />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -263,29 +324,7 @@ export function UserForm({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@exemplo.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {user ? "Nova Senha (opcional)" : "Senha"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder={
-                        user ? "Nova senha do usuário" : "Senha do usuário"
-                      }
-                      {...field}
-                    />
+                    <Input type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -299,20 +338,44 @@ export function UserForm({
                 <FormItem>
                   <FormLabel>CPF</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="000.000.000-00"
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {!user && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Função</FormLabel>
+                  <FormControl>
+                    <select
                       {...field}
-                      onChange={(e) => {
-                        // Formatar CPF enquanto digita
-                        let value = e.target.value.replace(/\D/g, "");
-                        if (value.length <= 11) {
-                          value = value.replace(/(\d{3})(\d)/, "$1.$2");
-                          value = value.replace(/(\d{3})(\d)/, "$1.$2");
-                          value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-                          field.onChange(value);
-                        }
-                      }}
-                    />
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="master">Master</option>
+                      <option value="admin">Administrador</option>
+                      <option value="coordinator">Coordenador</option>
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -326,94 +389,79 @@ export function UserForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Organização</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={!!user} // Não permitir mudar a organização na edição
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma organização" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {organizations.map((org) => (
-                          <SelectItem key={org.id} value={org.id}>
-                            {org.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <select
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setSelectedOrganizationId(e.target.value);
+                        }}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Selecione a organização</option>
+                        {isLoading ? (
+                          <option value="" disabled>
+                            Carregando...
+                          </option>
+                        ) : organizations.length > 0 ? (
+                          organizations.map((org) => (
+                            <option key={org.id} value={org.id}>
+                              {org.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>
+                            Nenhuma organização encontrada
+                          </option>
+                        )}
+                      </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
 
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Função</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma função" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                      <SelectItem value="responsible">Responsável</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {selectedRole === "responsible" && (
+            {selectedRole === "coordinator" && selectedOrganizationId && (
               <FormField
                 control={form.control}
                 name="unit_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Unidade</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma unidade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {units.map((unit) => (
-                          <SelectItem key={unit.id} value={unit.id}>
-                            {unit.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Selecione a unidade</option>
+                        {units.length > 0 ? (
+                          units.map((unit) => (
+                            <option key={unit.id} value={unit.id}>
+                              {unit.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>
+                            Nenhuma unidade encontrada
+                          </option>
+                        )}
+                      </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading
-                ? user
-                  ? "Salvando..."
-                  : "Criando..."
-                : user
-                ? "Salvar"
-                : "Criar Usuário"}
-            </Button>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Salvando..." : user ? "Atualizar" : "Criar"}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

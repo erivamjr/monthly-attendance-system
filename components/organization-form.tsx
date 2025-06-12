@@ -24,11 +24,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const organizationSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   slug: z.string().min(3, "Slug deve ter no mínimo 3 caracteres"),
-  logo_url: z.string().optional(),
+  logo_url: z.string().nullable().optional(),
 });
 
 type OrganizationFormData = z.infer<typeof organizationSchema>;
@@ -48,12 +49,13 @@ export function OrganizationForm({
 }: OrganizationFormProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<OrganizationFormData>({
     resolver: zodResolver(organizationSchema),
     defaultValues: organization || {
       name: "",
       slug: "",
-      logo_url: "",
+      logo_url: null,
     },
   });
 
@@ -64,7 +66,7 @@ export function OrganizationForm({
       form.reset({
         name: "",
         slug: "",
-        logo_url: "",
+        logo_url: null,
       });
     }
   }, [organization, form]);
@@ -98,6 +100,7 @@ export function OrganizationForm({
 
       onSuccess();
       onOpenChange(false);
+      router.refresh();
     } catch (error) {
       console.error("Erro ao salvar organização:", error);
       toast({
@@ -159,7 +162,7 @@ export function OrganizationForm({
                 <FormItem>
                   <FormLabel>URL do Logo</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

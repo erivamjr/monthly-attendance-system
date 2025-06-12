@@ -21,13 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSession } from "next-auth/react";
 
 type User = {
   id: string;
   name: string;
   email: string;
   cpf: string;
-  role: "admin" | "responsible";
+  role: "master" | "admin" | "coordinator";
   organization_id: string;
   unit: {
     name: string | null;
@@ -37,35 +38,24 @@ type User = {
 };
 
 export default function UsersPage() {
+  const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("all");
 
-  useEffect(() => {
-    const userStr = sessionStorage.getItem("currentUser");
-    if (userStr) {
-      setCurrentUser(JSON.parse(userStr));
-    }
-  }, []);
-
   const loadUsers = async () => {
-    if (!currentUser?.organization_id) return;
-
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/users?organizationId=${currentUser.organization_id}`
-      );
+      const response = await fetch("/api/users");
       if (!response.ok) {
         throw new Error("Erro ao carregar usuários");
       }
       const data = await response.json();
-      setUsers(data);
+      setUsers(data.users || []);
     } catch (err) {
       console.error("Erro ao carregar usuários:", err);
       toast({
@@ -79,10 +69,8 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    if (currentUser?.organization_id) {
-      loadUsers();
-    }
-  }, [currentUser]);
+    loadUsers();
+  }, []);
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
@@ -139,6 +127,7 @@ export default function UsersPage() {
                 <TableHead>Função</TableHead>
                 <TableHead>Unidade</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -151,13 +140,16 @@ export default function UsersPage() {
                     <Skeleton className="h-4 w-[150px]" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-[180px]" />
+                    <Skeleton className="h-4 w-[100px]" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-[50px]" />
+                    <Skeleton className="h-4 w-[100px]" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-[80px]" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-[100px]" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -213,11 +205,11 @@ export default function UsersPage() {
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
-                  {user.role === "admin"
+                  {user.role === "master"
+                    ? "Master"
+                    : user.role === "admin"
                     ? "Administrador"
-                    : user.role === "responsible"
-                    ? "Responsável"
-                    : "Visualizador"}
+                    : "Coordenador"}
                 </TableCell>
                 <TableCell>{user.unit?.name || "Não definida"}</TableCell>
                 <TableCell>
@@ -266,8 +258,7 @@ export default function UsersPage() {
           setShowForm(false);
           setSelectedUser(null);
         }}
-        organizations={[currentUser?.organization].filter(Boolean)}
-        isMasterView={false}
+        isMasterView={session?.user?.role === "master"}
         onSuccess={() => {
           loadUsers();
           setShowForm(false);

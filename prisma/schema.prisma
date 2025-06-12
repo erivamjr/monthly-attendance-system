@@ -143,6 +143,7 @@ model EventCode {
   contract_type   String
   code            Int
   created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
 
   @@unique([organization_id, event_type_id, contract_type])
   @@map("event_codes")

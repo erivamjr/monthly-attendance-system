@@ -43,7 +43,8 @@ export default function EmployeesPage() {
         throw new Error("Erro ao carregar servidores");
       }
       const data = await response.json();
-      setEmployees(data);
+      console.log("CONSOLANDO = ", data.employees);
+      setEmployees(data.employees);
     } catch (error) {
       console.error("Erro ao carregar servidores:", error);
       toast({
@@ -109,30 +110,38 @@ export default function EmployeesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {employees.map((employee) => (
-              <TableRow key={employee.id}>
-                <TableCell>{employee.name}</TableCell>
-                <TableCell>{employee.registration}</TableCell>
-                <TableCell>{employee.position}</TableCell>
-                <TableCell>{employee.unit.name}</TableCell>
-                <TableCell>
-                  {employee.is_active ? (
-                    <span className="text-green-600">Ativo</span>
-                  ) : (
-                    <span className="text-red-600">Inativo</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(employee)}
-                  >
-                    Editar
-                  </Button>
+            {employees ? (
+              employees.map((employee) => (
+                <TableRow key={employee.id}>
+                  <TableCell>{employee.name}</TableCell>
+                  <TableCell>{employee.registration}</TableCell>
+                  <TableCell>{employee.position}</TableCell>
+                  <TableCell>{employee.unit.name}</TableCell>
+                  <TableCell>
+                    {employee.is_active ? (
+                      <span className="text-green-600">Ativo</span>
+                    ) : (
+                      <span className="text-red-600">Inativo</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(employee)}
+                    >
+                      Editar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center">
+                  Nenhum servidor encontrado
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>

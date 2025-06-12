@@ -42,7 +42,7 @@ type User = {
   name: string;
   email: string;
   cpf: string;
-  role: "admin" | "responsible";
+  role: "master" | "admin" | "coordinator";
   organization_id: string;
   organization: {
     name: string;
@@ -50,7 +50,7 @@ type User = {
   unit: {
     name: string;
   } | null;
-  unit_id: string | null;
+  unit_id?: string;
   is_active: boolean;
 };
 
@@ -251,16 +251,11 @@ export function MasterDashboard() {
         </Card>
       </div>
 
-      {/* Seção de Gerenciamento de Usuários */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Gerenciamento de Usuários</CardTitle>
-            <CardDescription>
-              Crie e gerencie usuários administradores e responsáveis para cada
-              organização
-            </CardDescription>
-          </div>
+      {/* Remove the organizations table from here */}
+      {/* Remove the users table from here */}
+      {/* <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
           <div className="flex gap-2">
             <Select
               value={statusFilter}
@@ -282,15 +277,15 @@ export function MasterDashboard() {
               Novo Usuário
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>E-mail</TableHead>
                 <TableHead>Função</TableHead>
-                <TableHead>Organização</TableHead>
                 <TableHead>Unidade</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
@@ -299,13 +294,16 @@ export function MasterDashboard() {
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
+                  <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {user.role === "admin" ? "Administrador" : "Responsável"}
+                    {user.role === "master"
+                      ? "Master"
+                      : user.role === "admin"
+                      ? "Administrador"
+                      : "Coordenador"}
                   </TableCell>
-                  <TableCell>{user.organization.name}</TableCell>
-                  <TableCell>{user.unit?.name || "-"}</TableCell>
+                  <TableCell>{user.unit?.name || "Não definida"}</TableCell>
                   <TableCell>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -344,36 +342,27 @@ export function MasterDashboard() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
 
-      <UserForm
-        isOpen={showUserForm}
-        onClose={() => {
-          setShowUserForm(false);
-          setSelectedUser(null);
-        }}
-        organizations={organizations}
-        isMasterView={true}
-        onSuccess={() => {
-          fetchData();
-          setShowUserForm(false);
-          setSelectedUser(null);
-        }}
-        user={
-          selectedUser
-            ? {
-                id: selectedUser.id,
-                name: selectedUser.name,
-                email: selectedUser.email,
-                cpf: selectedUser.cpf,
-                role: selectedUser.role,
-                organization_id: selectedUser.organization_id,
-                unit_id: selectedUser.unit_id || undefined,
-              }
-            : undefined
-        }
-      />
+        <UserForm
+          isOpen={showUserForm}
+          onClose={() => {
+            setShowUserForm(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={() => {
+            setShowUserForm(false);
+            setSelectedUser(null);
+            fetchData();
+          }}
+          user={selectedUser ? {
+            ...selectedUser,
+            password: "", // UserForm expects password, but we don't fetch it
+            role: selectedUser.role as "master" | "admin" | "coordinator" // Explicit cast for role
+          } : undefined}
+          isMasterView={true}
+        />
+      </div> */}
     </div>
   );
 }

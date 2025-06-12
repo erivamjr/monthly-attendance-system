@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
+/*import { useState, useEffect } from "react";*/
 import {
   Plus,
   Pencil,
@@ -9,7 +7,7 @@ import {
   Users,
   LayoutGrid,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+/*import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -31,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";*/
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -8,8 +10,23 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCodeSettings } from "@/components/event-code-settings";
 import { OrganizationSettings } from "@/components/organization-settings";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session?.user?.organizationId) {
+      setOrganizationId(session.user.organizationId);
+    } else if (session?.user?.role === "master") {
+      setOrganizationId(null);
+    } else {
+      setOrganizationId(null);
+    }
+  }, [session]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -31,7 +48,13 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <OrganizationSettings />
+              {organizationId ? (
+                <OrganizationSettings organizationId={organizationId} />
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  Organização não identificada
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -46,7 +69,13 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EventCodeSettings />
+              {organizationId ? (
+                <EventCodeSettings organizationId={organizationId} />
+              ) : (
+                <div className="text-center text-muted-foreground">
+                  Organização não identificada
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

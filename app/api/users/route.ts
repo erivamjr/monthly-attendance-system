@@ -10,7 +10,7 @@ const userSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
   cpf: z.string().min(11, "CPF inválido").max(14, "CPF inválido"),
-  role: z.enum(["admin", "responsible"]),
+  role: z.enum(["master", "admin", "coordinator"]),
   organization_id: z.string().min(1, "Organização é obrigatória"),
   unit_id: z.string().optional(),
 });
@@ -20,7 +20,7 @@ const userUpdateSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
   cpf: z.string().min(11, "CPF inválido").max(14, "CPF inválido"),
-  role: z.enum(["admin", "responsible"]),
+  role: z.enum(["master", "admin", "coordinator"]),
   unit_id: z.string().optional(),
   password: z
     .string()

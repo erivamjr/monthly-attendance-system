@@ -56,7 +56,11 @@ type SavedEventCode = {
   code: number;
 };
 
-export function EventCodeSettings() {
+type EventCodeSettingsProps = {
+  organizationId: string;
+};
+
+export function EventCodeSettings({ organizationId }: EventCodeSettingsProps) {
   const [eventCodes, setEventCodes] = useState<EventCode[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,16 +78,11 @@ export function EventCodeSettings() {
 
   useEffect(() => {
     loadEventCodes();
-  }, []);
+  }, [organizationId]);
 
   const loadEventCodes = async () => {
     try {
       setLoading(true);
-      const currentUser = JSON.parse(
-        sessionStorage.getItem("currentUser") || "{}"
-      );
-      const organizationId =
-        currentUser?.organization_id || currentUser?.organization?.id;
 
       if (!organizationId) {
         throw new Error("Organização não identificada");
@@ -304,13 +303,6 @@ export function EventCodeSettings() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const currentUser = JSON.parse(
-        sessionStorage.getItem("currentUser") || "{}"
-      );
-
-      // Verificar se o usuário tem uma organização (tenta ambos os formatos)
-      const organizationId =
-        currentUser?.organization_id || currentUser?.organization?.id;
 
       if (!organizationId) {
         toast({

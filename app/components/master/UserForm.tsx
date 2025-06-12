@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,9 +48,10 @@ type User = {
 
 type UserFormProps = {
   user?: User;
+  isMasterView?: boolean;
 };
 
-export function UserForm({ user }: UserFormProps) {
+export function UserForm({ user, isMasterView = false }: UserFormProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -178,7 +181,7 @@ export function UserForm({ user }: UserFormProps) {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{user ? "Edit User" : "New User"}</DialogTitle>
+          <DialogTitle>{user ? "Edit User" : "Create User"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -228,9 +231,18 @@ export function UserForm({ user }: UserFormProps) {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="responsible">Responsible</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  {isMasterView ? (
+                    <>
+                      <SelectItem value="master">Master</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="coordinator">Coordinator</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="coordinator">Coordinator</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

@@ -22,7 +22,13 @@ type Organization = {
   logo_url: string | null;
 };
 
-export function OrganizationSettings() {
+type OrganizationSettingsProps = {
+  organizationId?: string;
+};
+
+export function OrganizationSettings({
+  organizationId,
+}: OrganizationSettingsProps) {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,23 +37,23 @@ export function OrganizationSettings() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadOrganization();
-  }, []);
+    if (organizationId) {
+      loadOrganization(organizationId);
+    } else {
+      setLoading(false);
+      setOrganization(null);
+      toast({
+        title: "Informação",
+        description: "Organização não identificada para configurações.",
+        variant: "default",
+      });
+    }
+  }, [organizationId]);
 
-  const loadOrganization = async () => {
+  const loadOrganization = async (id: string) => {
     try {
       setLoading(true);
-      const currentUser = JSON.parse(
-        sessionStorage.getItem("currentUser") || "{}"
-      );
-      const organizationId =
-        currentUser?.organization_id || currentUser?.organization?.id;
-
-      if (!organizationId) {
-        throw new Error("Organização não identificada");
-      }
-
-      const response = await fetch(`/api/organizations/${organizationId}`);
+      const response = await fetch(`/api/organizations/${id}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -57,14 +63,13 @@ export function OrganizationSettings() {
       setOrganization(data);
     } catch (error) {
       console.error("Erro ao carregar organização:", error);
+      setLoading(false);
       toast({
         title: "Erro",
         description:
           error instanceof Error ? error.message : "Erro ao carregar dados",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -138,7 +143,7 @@ export function OrganizationSettings() {
       setIsCreateDialogOpen(false);
 
       // Recarregar os dados
-      await loadOrganization();
+      await loadOrganization(data.id);
     } catch (error) {
       console.error("Erro ao criar organização:", error);
       toast({

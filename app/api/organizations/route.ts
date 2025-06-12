@@ -105,10 +105,14 @@ export async function POST(request: Request) {
     // Log the creation
     await prisma.log.create({
       data: {
-        organization_id: organization.id,
-        user_id: session.user.id,
         action: "CREATE_ORGANIZATION",
         details: { organization_id: organization.id },
+        organization: {
+          connect: { id: organization.id },
+        },
+        user: {
+          connect: { id: session.user.id },
+        },
       },
     });
 
@@ -152,10 +156,14 @@ export async function PATCH(
     // Log the update
     await prisma.log.create({
       data: {
-        organization_id: organization.id,
-        user_id: session.user.id,
         action: "UPDATE_ORGANIZATION",
         details: { organization_id: organization.id },
+        organization: {
+          connect: { id: organization.id },
+        },
+        user: {
+          connect: { id: session.user.id },
+        },
       },
     });
 

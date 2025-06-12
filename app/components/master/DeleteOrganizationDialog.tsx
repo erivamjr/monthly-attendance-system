@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,20 +42,20 @@ export function DeleteOrganizationDialog({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete organization");
+        throw new Error("Erro ao excluir organização");
       }
 
       toast({
-        title: "Success",
-        description: "Organization deleted successfully",
+        title: "Sucesso",
+        description: "Organização excluída com sucesso!",
       });
 
       router.refresh();
     } catch (error) {
-      console.error("Error deleting organization:", error);
+      console.error("Erro ao excluir organização:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete organization",
+        title: "Erro",
+        description: "Não foi possível excluir a organização.",
         variant: "destructive",
       });
     } finally {
@@ -70,16 +72,16 @@ export function DeleteOrganizationDialog({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Organization</AlertDialogTitle>
+          <AlertDialogTitle>Excluir Organização</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete {organization.name}? This action
-            cannot be undone.
+            Tem certeza que deseja excluir {organization.name}? Esta ação não
+            pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} disabled={loading}>
-            {loading ? "Deleting..." : "Delete"}
+            {loading ? "Excluindo..." : "Excluir"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
