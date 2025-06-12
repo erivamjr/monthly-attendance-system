@@ -40,7 +40,16 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      // Verifica se o usuário é master e redireciona para a rota correta
+      const response = await fetch("/api/auth/session");
+      const session = await response.json();
+
+      if (session?.user?.role === "MASTER") {
+        router.push("/dashboard/master/organizations");
+      } else {
+        router.push("/dashboard");
+      }
+
       router.refresh();
     } catch (error) {
       console.error("Erro no login:", error);

@@ -30,6 +30,7 @@ export function DeleteOrganizationDialog({
   organization,
 }: DeleteOrganizationDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -42,7 +43,8 @@ export function DeleteOrganizationDialog({
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao excluir organização");
+        const error = await response.text();
+        throw new Error(error || "Erro ao excluir organização");
       }
 
       toast({
@@ -50,12 +52,16 @@ export function DeleteOrganizationDialog({
         description: "Organização excluída com sucesso!",
       });
 
+      setOpen(false);
       router.refresh();
     } catch (error) {
       console.error("Erro ao excluir organização:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível excluir a organização.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível excluir a organização.",
         variant: "destructive",
       });
     } finally {
@@ -64,7 +70,7 @@ export function DeleteOrganizationDialog({
   };
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="outline" size="icon">
           <Trash2 className="h-4 w-4" />

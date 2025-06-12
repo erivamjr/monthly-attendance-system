@@ -103,18 +103,20 @@ export async function POST(request: Request) {
     });
 
     // Log the creation
-    await prisma.log.create({
-      data: {
-        action: "CREATE_ORGANIZATION",
-        details: { organization_id: organization.id },
-        organization: {
-          connect: { id: organization.id },
+    if (session.user.id) {
+      await prisma.log.create({
+        data: {
+          action: "CREATE_ORGANIZATION",
+          details: { organization_id: organization.id },
+          organization: {
+            connect: { id: organization.id },
+          },
+          user: {
+            connect: { id: session.user.id },
+          },
         },
-        user: {
-          connect: { id: session.user.id },
-        },
-      },
-    });
+      });
+    }
 
     return NextResponse.json(organization, { status: 201 });
   } catch (error) {

@@ -6,18 +6,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { prisma } from "@/lib/prisma";
 import { DeleteOrganizationDialog } from "../../../components/master/DeleteOrganizationDialog";
-import { OrganizationForm } from "@/components/organization-form";
 import { OrganizationActions } from "./OrganizationActions";
+import { EditOrganizationButton } from "./EditOrganizationButton";
 
 type Organization = {
   id: string;
   name: string;
   slug: string;
-  logo_url?: string;
+  logo_url: string | null;
+  created_at: Date;
   _count: {
     units: number;
     users: number;
@@ -76,7 +76,7 @@ export default async function OrganizationsPage() {
                 <TableCell>{org._count.employees}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <OrganizationForm organization={org} />
+                    <EditOrganizationButton organization={org} />
                     <DeleteOrganizationDialog organization={org} />
                   </div>
                 </TableCell>

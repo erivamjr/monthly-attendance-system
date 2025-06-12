@@ -52,7 +52,7 @@ export function OrganizationForm({
   const router = useRouter();
   const form = useForm<OrganizationFormData>({
     resolver: zodResolver(organizationSchema),
-    defaultValues: organization || {
+    defaultValues: {
       name: "",
       slug: "",
       logo_url: null,
@@ -69,7 +69,7 @@ export function OrganizationForm({
         logo_url: null,
       });
     }
-  }, [organization, form]);
+  }, [organization, form, open]);
 
   const onSubmit = async (data: OrganizationFormData) => {
     setLoading(true);
@@ -87,8 +87,10 @@ export function OrganizationForm({
         body: JSON.stringify(data),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Erro ao salvar organização");
+        throw new Error(responseData.error || "Erro ao salvar organização");
       }
 
       toast({
@@ -105,7 +107,10 @@ export function OrganizationForm({
       console.error("Erro ao salvar organização:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar a organização",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível salvar a organização",
         variant: "destructive",
       });
     } finally {

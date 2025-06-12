@@ -38,7 +38,12 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await signOut({ redirect: false });
+      await signOut({
+        redirect: true,
+        callbackUrl: "/login",
+      });
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
       router.push("/login");
     } finally {
       setIsLoggingOut(false);
