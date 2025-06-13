@@ -10,6 +10,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("SESSION = ", session);
 
     if (!session?.user) {
       return new NextResponse("Não autorizado", { status: 401 });
@@ -18,7 +19,10 @@ export async function PUT(
     const body = await request.json();
 
     // Verificar se o usuário tem permissão para editar
-    if (session.user.role !== "master" && session.user.role !== "admin") {
+    if (
+      session.user.role.toLowerCase() !== "master" &&
+      session.user.role.toLowerCase() !== "admin"
+    ) {
       return new NextResponse("Não autorizado", { status: 401 });
     }
 
@@ -35,8 +39,9 @@ export async function PUT(
     }
 
     // Se não for master, verificar se o usuário pertence à mesma organização
+    // O usuário master pode editar usuários de qualquer organização
     if (
-      session.user.role !== "master" &&
+      session.user.role.toLowerCase() === "admin" &&
       user.organization_id !== session.user.organizationId
     ) {
       return new NextResponse("Não autorizado", { status: 401 });
@@ -75,7 +80,7 @@ export async function PUT(
       name: body.name,
       email: body.email,
       cpf: body.cpf,
-      role: body.role,
+      role: body.role.toUpperCase(),
       organization_id: body.organization_id,
       unit_id: body.role === "responsible" ? body.unit_id : null,
     };

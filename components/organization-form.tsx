@@ -87,10 +87,17 @@ export function OrganizationForm({
         body: JSON.stringify(data),
       });
 
-      const responseData = await response.json();
+      let errorMessage = "Erro ao salvar organização";
+      let responseData: any = null;
+      try {
+        responseData = await response.json();
+      } catch {
+        responseData = await response.text();
+        errorMessage = responseData || errorMessage;
+      }
 
       if (!response.ok) {
-        throw new Error(responseData.error || "Erro ao salvar organização");
+        throw new Error((responseData && responseData.error) || errorMessage);
       }
 
       toast({

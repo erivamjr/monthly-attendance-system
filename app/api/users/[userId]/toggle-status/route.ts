@@ -16,7 +16,10 @@ export async function PATCH(
     }
 
     // Verificar se o usuário tem permissão para alterar o status
-    if (session.user.role !== "master" && session.user.role !== "admin") {
+    if (
+      session.user.role.toLowerCase() !== "master" &&
+      session.user.role.toLowerCase() !== "admin"
+    ) {
       return new NextResponse("Não autorizado", { status: 401 });
     }
 
@@ -35,8 +38,9 @@ export async function PATCH(
     }
 
     // Se não for master, verificar se o usuário pertence à mesma organização
+    // O usuário master pode alternar o status de usuários de qualquer organização
     if (
-      session.user.role !== "master" &&
+      session.user.role.toLowerCase() === "admin" &&
       user.organization_id !== session.user.organizationId
     ) {
       return new NextResponse("Não autorizado", { status: 401 });

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
     // For non-master users, force their organization context
     let queryOrgId = organizationId;
-    if (session.user.role !== "MASTER") {
+    if (session.user.role.toLowerCase() !== "master") {
       queryOrgId = session.user.organizationId;
     }
 

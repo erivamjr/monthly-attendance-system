@@ -24,7 +24,7 @@ export async function GET() {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "MASTER") {
+    if (session.user.role.toLowerCase() !== "master") {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 

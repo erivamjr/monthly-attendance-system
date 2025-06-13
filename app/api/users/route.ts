@@ -39,18 +39,29 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get("organizationId") || undefined;
+    const statusFilter = searchParams.get("status");
 
     // For non-master users, force their organization context
-    let whereClause: any = {
-      is_active: true,
-    };
-
+    let queryOrgId = organizationId;
     if (session.user.role === "MASTER") {
       if (organizationId) {
-        whereClause.organization_id = organizationId;
+        queryOrgId = organizationId;
       }
     } else {
-      whereClause.organization_id = session.user.organizationId;
+      queryOrgId = session.user.organizationId;
+    }
+
+    let whereClause: any = {};
+
+    if (queryOrgId) {
+      whereClause.organization_id = queryOrgId;
+    }
+
+    // Aplica o filtro de status condicionalmente
+    if (statusFilter === "active") {
+      whereClause.is_active = true;
+    } else if (statusFilter === "inactive") {
+      whereClause.is_active = false;
     }
 
     const users = await prisma.user.findMany({
@@ -96,7 +107,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
+    console.log("CONSOLANDO SESSION = ", session);
     if (!session) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
@@ -141,14 +152,17 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password || "changeme123", 10);
 
+    // Converta o role para maiúsculo para compatibilidade com o enum do Prisma
+    const prismaRole = role.toUpperCase();
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
         cpf,
-        role,
+        role: prismaRole,
         organization_id,
-        unit_id,
+        unit_id: unit_id || null,
         password: hashedPassword,
       },
       select: {
@@ -172,15 +186,20 @@ export async function POST(request: Request) {
       },
     });
 
-    // Log the creation
-    await prisma.log.create({
-      data: {
-        organization_id,
-        user_id: session.user.id,
+    // Tente criar o log, mas ignore erros
+    try {
+      const logData: any = {
+        organization: { connect: { id: organization_id } },
         action: "CREATE_USER",
         details: { created_user_id: user.id },
-      },
-    });
+      };
+      if (session.user.id) {
+        logData.user_id = session.user.id;
+      }
+      await prisma.log.create({ data: logData });
+    } catch (logError) {
+      console.error("Erro ao criar log de usuário:", logError);
+    }
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
@@ -254,7 +273,7 @@ export async function PATCH(
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (cpf) updateData.cpf = cpf;
-    if (role) updateData.role = role;
+    if (role) updateData.role = role.toUpperCase();
     if (unit_id !== undefined) updateData.unit_id = unit_id;
     if (is_active !== undefined) updateData.is_active = is_active;
     if (password) {

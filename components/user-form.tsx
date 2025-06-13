@@ -108,7 +108,7 @@ const userFormSchema = z
       .min(11, "CPF inválido")
       .max(14, "CPF inválido")
       .refine((cpf) => validateCPF(cpf), "CPF inválido"),
-    role: z.enum(["master", "admin", "coordinator"]),
+    role: z.enum(["master", "admin", "coordinator", "responsible", "viewer"]),
     organization_id: z.string().min(1, "Organização é obrigatória"),
     unit_id: z.string().optional(),
   })
@@ -130,7 +130,7 @@ type UserFormData = {
   email: string;
   cpf: string;
   password?: string;
-  role: "master" | "admin" | "coordinator";
+  role: "master" | "admin" | "coordinator" | "responsible" | "viewer";
   organization_id: string;
   unit_id?: string;
 };
@@ -220,6 +220,9 @@ export function UserForm({
   // Carregar organizações
   useEffect(() => {
     const loadOrganizations = async () => {
+      console.log("isMasterView:", isMasterView);
+      console.log("session role:", session?.user?.role);
+
       if (!isMasterView) return;
 
       setIsLoading(true);
@@ -227,7 +230,8 @@ export function UserForm({
         const response = await fetch("/api/organizations");
         if (!response.ok) throw new Error("Erro ao carregar organizações");
         const data = await response.json();
-        setOrganizations(data.organizations || []);
+        console.log("Organizações carregadas:", data);
+        setOrganizations(data || []);
       } catch (error) {
         console.error("Erro ao carregar organizações:", error);
         toast({
@@ -241,8 +245,10 @@ export function UserForm({
       }
     };
 
-    loadOrganizations();
-  }, [isMasterView]);
+    if (session?.user?.role?.toLowerCase() === "master") {
+      loadOrganizations();
+    }
+  }, [isMasterView, session?.user?.role]);
 
   const onSubmit = async (data: UserFormData) => {
     setIsSubmitting(true);
@@ -277,6 +283,7 @@ export function UserForm({
       });
 
       onSuccess();
+      return;
     } catch (error) {
       console.error("Erro ao salvar usuário:", error);
       toast({

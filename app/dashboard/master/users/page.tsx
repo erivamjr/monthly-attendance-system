@@ -21,7 +21,7 @@ type User = {
   name: string;
   email: string;
   cpf: string;
-  role: "master" | "admin" | "coordinator";
+  role: "master" | "admin" | "coordinator" | "responsible" | "viewer";
   organization_id: string;
   organization: {
     name: string;
@@ -46,11 +46,14 @@ export default function MasterUsersPage() {
   async function loadUsers() {
     try {
       setLoading(true);
-      const response = await fetch("/api/users");
+      const queryString =
+        statusFilter === "all" ? "" : `?status=${statusFilter}`;
+      const response = await fetch(`/api/users${queryString}`);
       if (!response.ok) {
         throw new Error("Erro ao carregar usuários");
       }
       const data = await response.json();
+      console.log("Dados dos usuários carregados após toggle:", data.users);
       setUsers(data.users);
     } catch (error) {
       console.error("Erro ao carregar usuários:", error);
@@ -68,8 +71,13 @@ export default function MasterUsersPage() {
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    loadUsers();
+  }, [statusFilter]);
+
   const handleEdit = (user: User) => {
     setSelectedUser(user);
+    console.log("USUARIO SELECIONADO = ", user);
     setShowForm(true);
   };
 
@@ -165,11 +173,23 @@ export default function MasterUsersPage() {
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.cpf}</TableCell>
                 <TableCell>
-                  {user.role === "master"
-                    ? "Master"
-                    : user.role === "admin"
-                    ? "Administrador"
-                    : "Coordenador"}
+                  {(() => {
+                    const role = user.role.toUpperCase();
+                    switch (role) {
+                      case "MASTER":
+                        return "Master";
+                      case "ADMIN":
+                        return "Administrador";
+                      case "COORDINATOR":
+                        return "Coordenador";
+                      case "RESPONSIBLE":
+                        return "Responsável";
+                      case "VIEWER":
+                        return "Visualizador";
+                      default:
+                        return role;
+                    }
+                  })()}
                 </TableCell>
                 <TableCell>{user.organization.name}</TableCell>
                 <TableCell>{user.unit?.name || "Não definida"}</TableCell>
