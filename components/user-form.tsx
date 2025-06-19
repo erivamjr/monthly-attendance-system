@@ -227,7 +227,10 @@ export function UserForm({
   // Atualizar valores do formulário quando o usuário mudar
   useEffect(() => {
     if (user) {
-      form.reset(user);
+      form.reset({
+        ...user,
+        unit_id: user.unit_id || undefined,
+      });
     } else {
       form.reset({
         name: "",
@@ -236,7 +239,7 @@ export function UserForm({
         password: "",
         role: "coordinator",
         organization_id: "",
-        unit_id: "",
+        unit_id: undefined,
       });
     }
   }, [user, form]);
@@ -268,30 +271,29 @@ export function UserForm({
     loadOrganizations();
   }, [isMasterView]);
 
-  // Atualizar unidades quando a organização mudar
+  // Atualizar unidades quando o papel mudar para 'coordinator'
   useEffect(() => {
-    const orgId = form.watch("organization_id");
-    if (orgId) {
-      loadUnits(orgId);
-    } else {
-      setUnits([]);
+    if (selectedRole === "coordinator" && form.watch("organization_id")) {
+      loadUnits(form.watch("organization_id"));
     }
-  }, [form.watch("organization_id")]);
+  }, [selectedRole, form.watch("organization_id")]);
 
-  // Preencher organization_id automaticamente para admin
+  // Preencher organization_id automaticamente para admin sempre que o form abrir
   useEffect(() => {
-    if (isAdmin && session?.user?.organizationId) {
+    if (isOpen && isAdmin && session?.user?.organizationId) {
       setSelectedOrganizationId(session.user.organizationId);
       form.setValue("organization_id", session.user.organizationId);
     }
-  }, [isAdmin, session?.user?.organizationId]);
+  }, [isOpen, isAdmin, session?.user?.organizationId, form]);
 
   const onSubmit = async (data: UserFormData) => {
+    console.log("[UserForm] onSubmit data:", data);
+    console.log("[UserForm] user prop:", user);
     setIsSubmitting(true);
 
     try {
       const url = user ? `/api/users/${user.id}` : "/api/users";
-      const method = user ? "PUT" : "POST";
+      const method = user ? "PATCH" : "POST";
 
       let formData = data;
 
@@ -301,6 +303,8 @@ export function UserForm({
         formData = dataWithoutPassword;
       }
 
+      console.log("[UserForm] fetch", { url, method, formData });
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -308,6 +312,15 @@ export function UserForm({
         },
         body: JSON.stringify(formData),
       });
+
+      console.log("[UserForm] response status:", response.status);
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        responseData = null;
+      }
+      console.log("[UserForm] response data:", responseData);
 
       if (!response.ok) {
         throw new Error("Erro ao salvar usuário");
@@ -345,7 +358,12 @@ export function UserForm({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.log("[UserForm] Erros de validação:", errors);
+            })}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -367,7 +385,7 @@ export function UserForm({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} />
+                    <Input type="email" autoComplete="username" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -480,7 +498,7 @@ export function UserForm({
                     <FormLabel>Unidade</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value || undefined}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -505,7 +523,13 @@ export function UserForm({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                onClick={() => {
+                  console.log("[UserForm] Botão de submit clicado");
+                }}
+              >
                 {isSubmitting ? "Salvando..." : user ? "Atualizar" : "Criar"}
               </Button>
             </div>

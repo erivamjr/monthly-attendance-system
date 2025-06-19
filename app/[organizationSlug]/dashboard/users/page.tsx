@@ -35,6 +35,9 @@ type User = {
   } | null;
   unit_id: string | null;
   is_active: boolean;
+  organization?: {
+    name: string | null;
+  } | null;
 };
 
 export default function UsersPage() {
@@ -73,8 +76,12 @@ export default function UsersPage() {
   }, []);
 
   const handleEdit = (user: User) => {
-    setSelectedUser(user);
-    setShowForm(true);
+    setShowForm(false);
+    setSelectedUser(null);
+    setTimeout(() => {
+      setSelectedUser(user);
+      setShowForm(true);
+    }, 0);
   };
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
@@ -194,7 +201,9 @@ export default function UsersPage() {
               <TableHead>Nome</TableHead>
               <TableHead>E-mail</TableHead>
               <TableHead>Permissões</TableHead>
-              <TableHead>Unidade</TableHead>
+              <TableHead>
+                {session?.user?.role === "master" ? "Organização" : "Unidade"}
+              </TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
@@ -211,7 +220,11 @@ export default function UsersPage() {
                     ? "Administrador"
                     : "Coordenador"}
                 </TableCell>
-                <TableCell>{user.unit?.name || "Não definida"}</TableCell>
+                <TableCell>
+                  {session?.user?.role === "master"
+                    ? user.organization?.name || "Não definida"
+                    : user.unit?.name || "Não definida"}
+                </TableCell>
                 <TableCell>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -268,17 +281,22 @@ export default function UsersPage() {
           selectedUser
             ? {
                 id: selectedUser.id,
-                name: selectedUser.name,
-                email: selectedUser.email,
-                cpf: selectedUser.cpf,
-                role: selectedUser.role.toLowerCase() as
-                  | "master"
-                  | "admin"
-                  | "coordinator"
-                  | "responsible"
-                  | "viewer",
-                organization_id: selectedUser.organization_id,
-                unit_id: selectedUser.unit_id || undefined,
+                name: selectedUser.name || "",
+                email: selectedUser.email || "",
+                cpf: selectedUser.cpf || "",
+                role:
+                  (selectedUser.role?.toLowerCase() as
+                    | "master"
+                    | "admin"
+                    | "coordinator"
+                    | "responsible"
+                    | "viewer") || "coordinator",
+                organization_id: selectedUser.organization_id || "",
+                unit_id: ["coordinator", "responsible"].includes(
+                  selectedUser.role?.toLowerCase?.()
+                )
+                  ? selectedUser.unit_id || undefined
+                  : undefined,
               }
             : undefined
         }

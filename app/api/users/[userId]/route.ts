@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcryptjs";
+import bcrypt from "bcryptjs";
 
 export async function PUT(
   request: Request,
@@ -44,6 +44,12 @@ export async function PUT(
       session.user.role.toLowerCase() === "admin" &&
       user.organization_id !== session.user.organizationId
     ) {
+      console.log(
+        "Admin orgId:",
+        session.user.organizationId,
+        "User orgId:",
+        user.organization_id
+      );
       return new NextResponse("Não autorizado", { status: 401 });
     }
 
@@ -75,6 +81,13 @@ export async function PUT(
       }
     }
 
+    // Impedir que admin edite usuário para master
+    if (session.user.role.toLowerCase() === "admin" && body.role === "master") {
+      return new NextResponse("Admins não podem editar usuários para master", {
+        status: 403,
+      });
+    }
+
     // Preparar dados para atualização
     const updateData: any = {
       name: body.name,
@@ -87,7 +100,7 @@ export async function PUT(
 
     // Se uma nova senha foi fornecida, hash e adiciona aos dados
     if (body.password) {
-      updateData.password = await hash(body.password, 12);
+      updateData.password = await bcrypt.hash(body.password, 10);
     }
 
     // Atualizar usuário
@@ -101,4 +114,43 @@ export async function PUT(
     console.error("Erro ao atualizar usuário:", error);
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
+}
+
+export async function PATCH(
+  request: Request,
+  context: { params: { userId: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session)
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
+  const body = await request.json();
+  const { name, email, cpf, role, unit_id, is_active, password } = body;
+
+  const updateData: any = {};
+  if (name) updateData.name = name;
+  if (email) updateData.email = email;
+  if (cpf) updateData.cpf = cpf;
+  if (role) updateData.role = role;
+  if (unit_id !== undefined) updateData.unit_id = unit_id || null;
+  if (is_active !== undefined) updateData.is_active = is_active;
+  if (password) updateData.password = await bcrypt.hash(password, 10);
+
+  const updatedUser = await prisma.user.update({
+    where: { id: context.params.userId },
+    data: updateData,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      cpf: true,
+      role: true,
+      is_active: true,
+      organization_id: true,
+      unit_id: true,
+      unit: { select: { id: true, name: true } },
+    },
+  });
+
+  return NextResponse.json(updatedUser);
 }

@@ -64,6 +64,11 @@ export async function GET(request: Request) {
       whereClause.is_active = false;
     }
 
+    // Filtro de role para master
+    if (session.user.role === "master") {
+      whereClause.role = { in: ["master", "admin"] };
+    }
+
     const users = await prisma.user.findMany({
       where: whereClause,
       select: {
@@ -87,6 +92,7 @@ export async function GET(request: Request) {
             name: true,
           },
         },
+        unit_id: true,
       },
       orderBy: {
         name: "asc",
@@ -146,6 +152,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Email ou CPF já cadastrado" },
         { status: 400 }
+      );
+    }
+
+    // Impedir que admin crie usuário master
+    if (session.user.role === "admin" && role === "master") {
+      return NextResponse.json(
+        { error: "Admins não podem criar usuários master" },
+        { status: 403 }
       );
     }
 
@@ -265,17 +279,28 @@ export async function PATCH(
       }
     }
 
+    // Impedir que admin edite usuário para master
+    if (session.user.role === "admin" && role === "master") {
+      return NextResponse.json(
+        { error: "Admins não podem editar usuários para master" },
+        { status: 403 }
+      );
+    }
+
     // Prepare update data
     const updateData: any = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (cpf) updateData.cpf = cpf;
-    if (role) updateData.role = role.toUpperCase();
-    if (unit_id !== undefined) updateData.unit_id = unit_id;
+    if (role) updateData.role = role;
+    if (unit_id !== undefined) updateData.unit_id = unit_id || null;
     if (is_active !== undefined) updateData.is_active = is_active;
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
+
+    console.log("[PATCH /api/users/:id] unit_id recebido:", unit_id);
+    console.log("[PATCH /api/users/:id] updateData:", updateData);
 
     const updatedUser = await prisma.user.update({
       where: { id: params.id },
