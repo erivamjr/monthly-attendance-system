@@ -17,7 +17,7 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== "MASTER") {
+    if (!session?.user || session.user.role !== "master") {
       return new NextResponse("Não autorizado", { status: 401 });
     }
 
@@ -137,7 +137,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== "MASTER") {
+    if (!session?.user || session.user.role !== "master") {
       return new NextResponse("Não autorizado", { status: 401 });
     }
 

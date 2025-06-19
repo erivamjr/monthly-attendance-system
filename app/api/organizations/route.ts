@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "MASTER") {
+    if (session.user.role !== "master") {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -140,7 +140,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "MASTER") {
+    if (session.user.role !== "master") {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -191,7 +191,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (session.user.role !== "MASTER") {
+    if (session.user.role !== "master") {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 

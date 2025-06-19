@@ -17,7 +17,7 @@ export async function GET(
 
     // For non-master users, ensure they can only view salary floors in their organization
     if (
-      session.user.role !== "MASTER" &&
+      session.user.role !== "master" &&
       params.id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -54,13 +54,13 @@ export async function POST(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     // For non-master users, ensure they can only create salary floors in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       params.id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });

@@ -175,11 +175,35 @@ export function UserForm({
   });
 
   const selectedRole = form.watch("role");
+  const isMaster = session?.user?.role?.toLowerCase() === "master";
+  const isAdmin = session?.user?.role?.toLowerCase() === "admin";
+
+  // Determina se deve mostrar o campo de unidade
+  const shouldShowUnitField = () => {
+    // Se for master, não mostra unidade
+    if (isMaster) return false;
+
+    // Se for admin, mostra unidade apenas para coordenadores
+    if (isAdmin) return selectedRole === "coordinator";
+
+    return false;
+  };
+
+  // Determina se deve mostrar o campo de organização
+  const shouldShowOrganizationField = () => {
+    // Se for master, mostra organização apenas para admins
+    if (isMaster) return selectedRole === "admin";
+
+    // Se for admin, não mostra organização
+    if (isAdmin) return false;
+
+    return false;
+  };
 
   // Carregar unidades da organização selecionada
   const loadUnits = async (orgId: string) => {
     try {
-      const response = await fetch(`/api/units?organization_id=${orgId}`);
+      const response = await fetch(`/api/units?organizationId=${orgId}`);
       if (!response.ok) throw new Error("Erro ao carregar unidades");
       const data = await response.json();
       setUnits(data.units);
@@ -220,9 +244,6 @@ export function UserForm({
   // Carregar organizações
   useEffect(() => {
     const loadOrganizations = async () => {
-      console.log("isMasterView:", isMasterView);
-      console.log("session role:", session?.user?.role);
-
       if (!isMasterView) return;
 
       setIsLoading(true);
@@ -230,7 +251,6 @@ export function UserForm({
         const response = await fetch("/api/organizations");
         if (!response.ok) throw new Error("Erro ao carregar organizações");
         const data = await response.json();
-        console.log("Organizações carregadas:", data);
         setOrganizations(data || []);
       } catch (error) {
         console.error("Erro ao carregar organizações:", error);
@@ -245,10 +265,26 @@ export function UserForm({
       }
     };
 
-    if (session?.user?.role?.toLowerCase() === "master") {
-      loadOrganizations();
+    loadOrganizations();
+  }, [isMasterView]);
+
+  // Atualizar unidades quando a organização mudar
+  useEffect(() => {
+    const orgId = form.watch("organization_id");
+    if (orgId) {
+      loadUnits(orgId);
+    } else {
+      setUnits([]);
     }
-  }, [isMasterView, session?.user?.role]);
+  }, [form.watch("organization_id")]);
+
+  // Preencher organization_id automaticamente para admin
+  useEffect(() => {
+    if (isAdmin && session?.user?.organizationId) {
+      setSelectedOrganizationId(session.user.organizationId);
+      form.setValue("organization_id", session.user.organizationId);
+    }
+  }, [isAdmin, session?.user?.organizationId]);
 
   const onSubmit = async (data: UserFormData) => {
     setIsSubmitting(true);
@@ -360,7 +396,11 @@ export function UserForm({
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -374,16 +414,25 @@ export function UserForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Função</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="master">Master</option>
-                      <option value="admin">Administrador</option>
-                      <option value="coordinator">Coordenador</option>
-                    </select>
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma função" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isMasterView && (
+                        <SelectItem value="master">Master</SelectItem>
+                      )}
+                      <SelectItem value="admin">Administrador</SelectItem>
+                      <SelectItem value="coordinator">Coordenador</SelectItem>
+                      <SelectItem value="responsible">Responsável</SelectItem>
+                      <SelectItem value="viewer">Visualizador</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -396,65 +445,56 @@ export function UserForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Organização</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          setSelectedOrganizationId(e.target.value);
-                        }}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">Selecione a organização</option>
-                        {isLoading ? (
-                          <option value="" disabled>
-                            Carregando...
-                          </option>
-                        ) : organizations.length > 0 ? (
-                          organizations.map((org) => (
-                            <option key={org.id} value={org.id}>
-                              {org.name}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>
-                            Nenhuma organização encontrada
-                          </option>
-                        )}
-                      </select>
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedOrganizationId(value);
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma organização" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
 
-            {selectedRole === "coordinator" && selectedOrganizationId && (
+            {selectedRole === "coordinator" && (
               <FormField
                 control={form.control}
                 name="unit_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Unidade</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">Selecione a unidade</option>
-                        {units.length > 0 ? (
-                          units.map((unit) => (
-                            <option key={unit.id} value={unit.id}>
-                              {unit.name}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="" disabled>
-                            Nenhuma unidade encontrada
-                          </option>
-                        )}
-                      </select>
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma unidade" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {units.map((unit) => (
+                          <SelectItem key={unit.id} value={unit.id}>
+                            {unit.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

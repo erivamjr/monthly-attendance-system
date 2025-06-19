@@ -15,16 +15,20 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import type { SidebarNavItem } from "@/components/sidebar-nav";
 import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
-  children,
-}: {
+interface OrganizationLayoutProps {
   children: React.ReactNode;
-}) {
+  params: { organizationSlug: string };
+}
+
+export default function OrganizationLayout({
+  children,
+  params,
+}: OrganizationLayoutProps) {
+  const { organizationSlug } = params;
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -42,20 +46,28 @@ export default function DashboardLayout({
     redirect("/login");
   }
 
+  // Verifica se o usuário tem acesso a esta organização
+  if (
+    session.user.role !== "master" &&
+    session.user.organizationSlug !== organizationSlug
+  ) {
+    redirect("/unauthorized");
+  }
+
   const masterNavItems: SidebarNavItem[] = [
     {
       title: "Dashboard",
-      href: "/dashboard/master",
+      href: `/${organizationSlug}/dashboard`,
       icon: LayoutDashboard,
     },
     {
       title: "Organizações",
-      href: "/dashboard/master/organizations",
+      href: `/${organizationSlug}/dashboard/organizations`,
       icon: Building2,
     },
     {
       title: "Usuários",
-      href: "/dashboard/master/users",
+      href: `/${organizationSlug}/dashboard/users`,
       icon: Users,
     },
   ];
@@ -63,30 +75,50 @@ export default function DashboardLayout({
   const adminNavItems: SidebarNavItem[] = [
     {
       title: "Dashboard",
-      href: "/dashboard/admin",
+      href: `/${organizationSlug}/dashboard`,
       icon: LayoutDashboard,
     },
     {
       title: "Unidades",
-      href: "/dashboard/admin/units",
+      href: `/${organizationSlug}/dashboard/units`,
       icon: Building2,
     },
     {
       title: "Usuários",
-      href: "/dashboard/admin/users",
+      href: `/${organizationSlug}/dashboard/users`,
       icon: Users,
+    },
+    {
+      title: "Funcionários",
+      href: `/${organizationSlug}/dashboard/employees`,
+      icon: Users,
+    },
+    {
+      title: "Frequência",
+      href: `/${organizationSlug}/dashboard/frequency`,
+      icon: CalendarDays,
+    },
+    {
+      title: "Relatórios",
+      href: `/${organizationSlug}/dashboard/reports`,
+      icon: FileText,
+    },
+    {
+      title: "Configurações",
+      href: `/${organizationSlug}/dashboard/settings`,
+      icon: Settings,
     },
   ];
 
   const responsibleNavItems: SidebarNavItem[] = [
     {
       title: "Dashboard",
-      href: "/dashboard/responsible",
+      href: `/${organizationSlug}/dashboard`,
       icon: LayoutDashboard,
     },
     {
       title: "Presenças",
-      href: "/dashboard/responsible/attendances",
+      href: `/${organizationSlug}/dashboard/attendances`,
       icon: ClipboardList,
     },
   ];
@@ -94,13 +126,13 @@ export default function DashboardLayout({
   let navItems: SidebarNavItem[] = [];
 
   switch (session.user.role) {
-    case "MASTER":
+    case "master":
       navItems = masterNavItems;
       break;
-    case "ADMIN":
+    case "admin":
       navItems = adminNavItems;
       break;
-    case "RESPONSIBLE":
+    case "responsible":
       navItems = responsibleNavItems;
       break;
   }

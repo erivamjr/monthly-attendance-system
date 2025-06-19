@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/components/auth-provider";
+import { useSession } from "next-auth/react";
 import { Pencil, Trash2, Users } from "lucide-react";
 import {
   Dialog,
@@ -41,7 +41,8 @@ export function UnitManagementTable() {
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [showAddEmployeeDialog, setShowAddEmployeeDialog] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const organizationId = session?.user?.organizationId;
 
   const fetchUnits = async () => {
     try {
@@ -124,7 +125,13 @@ export function UnitManagementTable() {
                 Preencha os dados da nova unidade.
               </DialogDescription>
             </DialogHeader>
-            <UnitForm />
+            {organizationId && (
+              <UnitForm
+                onSuccess={fetchUnits}
+                onCancel={() => {}}
+                organizationId={organizationId}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -201,7 +208,8 @@ export function UnitManagementTable() {
           </DialogHeader>
           {selectedUnit && (
             <EmployeeForm
-              unitId={selectedUnit.id}
+              open={showAddEmployeeDialog}
+              onOpenChange={setShowAddEmployeeDialog}
               onSuccess={handleEmployeeAdded}
             />
           )}

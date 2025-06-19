@@ -44,7 +44,7 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/session");
       const session = await response.json();
 
-      if (session?.user?.role === "MASTER") {
+      if (session?.user?.role === "master") {
         router.push("/dashboard/master/organizations");
       } else {
         router.push("/dashboard");
@@ -62,6 +62,8 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  console.log("ROTA LOGIN");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">

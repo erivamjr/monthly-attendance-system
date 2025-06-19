@@ -7,6 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("Sessão do usuário:", session);
 
     if (!session) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
       is_active: true,
     };
 
-    if (session.user.role === "COORDINATOR") {
+    if (session.user.role === "coordinator") {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { unit_id: true },
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
 
     // For non-master users, ensure they can only create units in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -150,7 +151,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -167,7 +168,7 @@ export async function PATCH(
 
     // For non-master users, ensure they can only update units in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       unit.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -217,7 +218,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -243,7 +244,7 @@ export async function DELETE(
 
     // For non-master users, ensure they can only delete units in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       unit.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });

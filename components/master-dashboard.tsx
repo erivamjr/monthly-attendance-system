@@ -51,7 +51,7 @@ type User = {
     name: string;
   } | null;
   unit_id?: string;
-  is_active: boolean;
+  is_active?: boolean;
 };
 
 export function MasterDashboard() {
@@ -82,7 +82,8 @@ export function MasterDashboard() {
         throw new Error("Erro ao carregar usuários");
       }
       const usersData = await usersResponse.json();
-      setUsers(usersData);
+      console.log("Dados de usuários recebidos:", usersData);
+      setUsers(Array.isArray(usersData) ? usersData : []);
 
       // Calcular estatísticas
       const stats = {
@@ -134,9 +135,9 @@ export function MasterDashboard() {
                 <div className="text-2xl font-bold">
                   <Skeleton className="h-8 w-[50px]" />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   <Skeleton className="h-4 w-[120px]" />
-                </p>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -187,10 +188,11 @@ export function MasterDashboard() {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = (users || []).filter((user) => {
+    if (!user) return false;
     if (statusFilter === "all") return true;
-    if (statusFilter === "active") return user.is_active;
-    return !user.is_active;
+    if (statusFilter === "active") return user?.is_active;
+    return !user?.is_active;
   });
 
   return (
@@ -205,9 +207,9 @@ export function MasterDashboard() {
             <div className="text-2xl font-bold">
               {stats?.totalOrganizations}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de organizações cadastradas
-            </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -218,9 +220,9 @@ export function MasterDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalUnits}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de unidades em todas as organizações
-            </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -231,9 +233,9 @@ export function MasterDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de usuários em todas as organizações
-            </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -244,125 +246,12 @@ export function MasterDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de funcionários em todas as organizações
-            </p>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Remove the organizations table from here */}
-      {/* Remove the users table from here */}
-      {/* <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
-          <div className="flex gap-2">
-            <Select
-              value={statusFilter}
-              onValueChange={(value: "all" | "active" | "inactive") =>
-                setStatusFilter(value)
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativos</SelectItem>
-                <SelectItem value="inactive">Inativos</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={() => setShowUserForm(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Novo Usuário
-            </Button>
-          </div>
-        </div>
-
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.role === "master"
-                      ? "Master"
-                      : user.role === "admin"
-                      ? "Administrador"
-                      : "Coordenador"}
-                  </TableCell>
-                  <TableCell>{user.unit?.name || "Não definida"}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.is_active
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {user.is_active ? "Ativo" : "Inativo"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(user)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          handleToggleStatus(user.id, user.is_active)
-                        }
-                        className={
-                          user.is_active ? "text-red-600" : "text-green-600"
-                        }
-                      >
-                        {user.is_active ? "Desativar" : "Ativar"}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        <UserForm
-          isOpen={showUserForm}
-          onClose={() => {
-            setShowUserForm(false);
-            setSelectedUser(null);
-          }}
-          onSuccess={() => {
-            setShowUserForm(false);
-            setSelectedUser(null);
-            fetchData();
-          }}
-          user={selectedUser ? {
-            ...selectedUser,
-            password: "", // UserForm expects password, but we don't fetch it
-            role: selectedUser.role as "master" | "admin" | "coordinator" // Explicit cast for role
-          } : undefined}
-          isMasterView={true}
-        />
-      </div> */}
     </div>
   );
 }

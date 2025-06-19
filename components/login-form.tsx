@@ -5,6 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, HelpCircle, Loader2, Users } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,8 @@ export function LoginForm() {
   });
   const { toast } = useToast();
 
+  console.log("COMPONENTE LOGIN");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -62,33 +65,28 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    setError("");
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erro ao fazer login");
+      if (result?.error) {
+        setError(result.error);
+        toast({
+          title: "Erro ao fazer login",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        router.push("/dashboard");
       }
-
-      // Armazenar dados do usuário no sessionStorage
-      sessionStorage.setItem("currentUser", JSON.stringify(data.user));
-
-      // Redirecionar para o dashboard
-      router.push("/dashboard");
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
+      setError("Erro inesperado ao fazer login");
       toast({
         title: "Erro ao fazer login",
-        description:
-          error instanceof Error ? error.message : "Tente novamente mais tarde",
+        description: "Tente novamente mais tarde",
         variant: "destructive",
       });
     } finally {

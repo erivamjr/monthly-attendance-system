@@ -27,37 +27,46 @@ export default function SettingsPage() {
     }
   }, [session]);
 
+  const isAdmin = session?.user?.role === "admin";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Configurações</h1>
       </div>
 
-      <Tabs defaultValue="organization" className="space-y-6">
+      <Tabs
+        defaultValue={isAdmin ? "event-codes" : "organization"}
+        className="space-y-6"
+      >
         <TabsList>
-          <TabsTrigger value="organization">Organização</TabsTrigger>
+          {!isAdmin && (
+            <TabsTrigger value="organization">Organização</TabsTrigger>
+          )}
           <TabsTrigger value="event-codes">Códigos de Evento</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="organization">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações da Organização</CardTitle>
-              <CardDescription>
-                Gerencie as informações básicas da sua organização
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {organizationId ? (
-                <OrganizationSettings organizationId={organizationId} />
-              ) : (
-                <div className="text-center text-muted-foreground">
-                  Organização não identificada
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {!isAdmin && (
+          <TabsContent value="organization">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações da Organização</CardTitle>
+                <CardDescription>
+                  Gerencie as informações básicas da sua organização
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {organizationId ? (
+                  <OrganizationSettings organizationId={organizationId} />
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    Organização não identificada
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="event-codes">
           <Card>

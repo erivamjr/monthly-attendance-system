@@ -22,9 +22,10 @@ type Unit = {
 
 type DeleteUnitDialogProps = {
   unit: Unit;
+  onSuccess?: () => void;
 };
 
-export function DeleteUnitDialog({ unit }: DeleteUnitDialogProps) {
+export function DeleteUnitDialog({ unit, onSuccess }: DeleteUnitDialogProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -46,6 +47,7 @@ export function DeleteUnitDialog({ unit }: DeleteUnitDialogProps) {
         description: "Unit deleted successfully",
       });
 
+      if (onSuccess) onSuccess();
       router.refresh();
     } catch (error) {
       console.error("Error deleting unit:", error);

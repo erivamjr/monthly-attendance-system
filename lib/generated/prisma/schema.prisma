@@ -52,7 +52,7 @@ model User {
   email            String           @unique
   password         String           @default("changeme123")
   cpf              String           @unique
-  role             UserRole         @default(VIEWER)
+  role             UserRole         @default(viewer)
   organization_id  String
   organization     Organization     @relation(fields: [organization_id], references: [id])
   unit_id          String?
@@ -143,6 +143,7 @@ model EventCode {
   contract_type   String
   code            Int
   created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
 
   @@unique([organization_id, event_type_id, contract_type])
   @@map("event_codes")
@@ -177,11 +178,11 @@ model Log {
 }
 
 enum UserRole {
-  MASTER
-  ADMIN
-  COORDINATOR
-  RESPONSIBLE
-  VIEWER
+  master
+  admin
+  coordinator
+  responsible
+  viewer
 }
 
 enum SheetStatus {

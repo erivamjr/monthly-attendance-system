@@ -69,11 +69,11 @@ export type Log = $Result.DefaultSelection<Prisma.$LogPayload>
  */
 export namespace $Enums {
   export const UserRole: {
-  MASTER: 'MASTER',
-  ADMIN: 'ADMIN',
-  COORDINATOR: 'COORDINATOR',
-  RESPONSIBLE: 'RESPONSIBLE',
-  VIEWER: 'VIEWER'
+  master: 'master',
+  admin: 'admin',
+  coordinator: 'coordinator',
+  responsible: 'responsible',
+  viewer: 'viewer'
 };
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]

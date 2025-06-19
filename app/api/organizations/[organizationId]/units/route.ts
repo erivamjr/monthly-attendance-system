@@ -29,9 +29,21 @@ export async function GET(
         orderBy: {
           name: "asc",
         },
+        include: {
+          _count: { select: { employees: true } },
+        },
       });
 
-      return NextResponse.json(units);
+      const unitsWithFrontendFields = units.map((unit) => ({
+        id: unit.id,
+        name: unit.name,
+        location: unit.location,
+        is_active: unit.is_active,
+        responsible: null, // ajuste se houver relação
+        employeeCount: unit._count.employees,
+      }));
+
+      return NextResponse.json(unitsWithFrontendFields);
     } else if (session.user.role === "admin") {
       // Admin só pode ver unidades da sua própria organização
       if (params.organizationId !== session.user.organizationId) {
@@ -43,9 +55,21 @@ export async function GET(
         orderBy: {
           name: "asc",
         },
+        include: {
+          _count: { select: { employees: true } },
+        },
       });
 
-      return NextResponse.json(units);
+      const unitsWithFrontendFields = units.map((unit) => ({
+        id: unit.id,
+        name: unit.name,
+        location: unit.location,
+        is_active: unit.is_active,
+        responsible: null, // ajuste se houver relação
+        employeeCount: unit._count.employees,
+      }));
+
+      return NextResponse.json(unitsWithFrontendFields);
     } else {
       return new NextResponse("Não autorizado", { status: 401 });
     }

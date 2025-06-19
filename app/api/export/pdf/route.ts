@@ -56,14 +56,14 @@ export async function GET(request: Request) {
 
     // For non-master users, ensure they can only view sheets in their organization
     if (
-      session.user.role !== "MASTER" &&
+      session.user.role !== "master" &&
       sheet.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     // For coordinators, ensure they can only view sheets for their unit
-    if (session.user.role === "COORDINATOR") {
+    if (session.user.role === "coordinator") {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { unit_id: true },

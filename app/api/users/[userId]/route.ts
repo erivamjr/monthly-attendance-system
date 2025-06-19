@@ -80,7 +80,7 @@ export async function PUT(
       name: body.name,
       email: body.email,
       cpf: body.cpf,
-      role: body.role.toUpperCase(),
+      role: body.role,
       organization_id: body.organization_id,
       unit_id: body.role === "responsible" ? body.unit_id : null,
     };

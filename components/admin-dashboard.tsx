@@ -107,9 +107,9 @@ export function AdminDashboard() {
                 <div className="text-2xl font-bold">
                   <Skeleton className="h-8 w-[50px]" />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   <Skeleton className="h-4 w-[120px]" />
-                </p>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -136,9 +136,9 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalUnits}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de unidades na organização
-            </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -149,9 +149,9 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de usuários na organização
-            </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -162,97 +162,12 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               Total de funcionários na organização
-            </p>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Seção de Gerenciamento de Usuários */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Gerenciamento de Usuários</CardTitle>
-            <CardDescription>
-              Crie e gerencie usuários administradores e responsáveis da sua
-              organização
-            </CardDescription>
-          </div>
-          <Button onClick={() => setShowUserForm(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Usuário
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Unidade</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.role === "admin" ? "Administrador" : "Responsável"}
-                  </TableCell>
-                  <TableCell>{user.unit?.name || "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Modal de criação/edição de usuário */}
-      <UserForm
-        isOpen={showUserForm}
-        onClose={() => setShowUserForm(false)}
-        organizations={[organization].filter(Boolean)}
-        isMasterView={false}
-        onSuccess={async () => {
-          setShowUserForm(false);
-          try {
-            // Buscar organização
-            const orgResponse = await fetch(
-              `/api/organizations/${session?.user?.organizationId}`
-            );
-            if (!orgResponse.ok) {
-              throw new Error("Erro ao carregar dados da organização");
-            }
-            const org = await orgResponse.json();
-            setOrganization(org);
-
-            // Buscar usuários
-            const usersResponse = await fetch("/api/users");
-            if (!usersResponse.ok) {
-              throw new Error("Erro ao carregar usuários");
-            }
-            const usersData = await usersResponse.json();
-            setUsers(usersData);
-
-            // Calcular estatísticas
-            setStats({
-              totalUnits: org._count?.units || 0,
-              totalUsers: org._count?.users || 0,
-              totalEmployees: org._count?.employees || 0,
-            });
-          } catch (error) {
-            console.error("Erro ao recarregar dados:", error);
-            toast({
-              title: "Erro",
-              description: "Não foi possível recarregar os dados",
-              variant: "destructive",
-            });
-          }
-        }}
-      />
     </div>
   );
 }

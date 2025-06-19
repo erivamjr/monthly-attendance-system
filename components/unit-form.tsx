@@ -10,15 +10,21 @@ type UnitFormProps = {
   onSuccess: () => void;
   onCancel: () => void;
   organizationId: string;
+  initialData?: {
+    id: string;
+    name: string;
+    location: string;
+  };
 };
 
 export function UnitForm({
   onSuccess,
   onCancel,
   organizationId,
+  initialData,
 }: UnitFormProps) {
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
+  const [name, setName] = useState(initialData?.name || "");
+  const [location, setLocation] = useState(initialData?.location || "");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,34 +32,59 @@ export function UnitForm({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/units", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          location,
-          organization_id: organizationId,
-          is_active: true,
-        }),
-      });
+      let response;
+      if (initialData) {
+        // Editar unidade
+        response = await fetch(`/api/units/${initialData.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            location,
+          }),
+        });
+      } else {
+        // Criar unidade
+        response = await fetch("/api/units", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            location,
+            organization_id: organizationId,
+            is_active: true,
+          }),
+        });
+      }
 
       if (!response.ok) {
-        throw new Error("Erro ao criar unidade");
+        throw new Error(
+          initialData ? "Erro ao editar unidade" : "Erro ao criar unidade"
+        );
       }
 
       toast({
         title: "Sucesso",
-        description: "Unidade criada com sucesso!",
+        description: initialData
+          ? "Unidade editada com sucesso!"
+          : "Unidade criada com sucesso!",
       });
 
       onSuccess();
     } catch (err) {
-      console.error("Erro ao criar unidade:", err);
+      console.error(
+        initialData ? "Erro ao editar unidade:" : "Erro ao criar unidade:",
+        err
+      );
       toast({
         title: "Erro",
-        description: "Não foi possível criar a unidade.",
+        description: initialData
+          ? "Não foi possível editar a unidade."
+          : "Não foi possível criar a unidade.",
         variant: "destructive",
       });
     } finally {
@@ -95,7 +126,13 @@ export function UnitForm({
         </Button>
         <Button type="submit" className="gap-2" disabled={loading}>
           <Save className="h-4 w-4" />
-          {loading ? "Criando..." : "Criar Unidade"}
+          {loading
+            ? initialData
+              ? "Salvando..."
+              : "Criando..."
+            : initialData
+            ? "Salvar"
+            : "Criar Unidade"}
         </Button>
       </div>
     </form>

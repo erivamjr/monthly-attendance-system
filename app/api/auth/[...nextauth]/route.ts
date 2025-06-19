@@ -21,7 +21,7 @@ export const authOptions: NextAuthOptions = {
         try {
           // 1) tenta master
           const masterUser = await prisma.user.findFirst({
-            where: { email: credentials.email, role: "MASTER" },
+            where: { email: credentials.email, role: "master" },
           });
 
           if (masterUser) {
@@ -35,7 +35,7 @@ export const authOptions: NextAuthOptions = {
               id: masterUser.id,
               name: masterUser.name,
               email: masterUser.email,
-              role: "MASTER",
+              role: "master",
             };
           }
 

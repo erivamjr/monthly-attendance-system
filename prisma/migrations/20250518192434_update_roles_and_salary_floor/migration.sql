@@ -6,7 +6,7 @@
 
 */
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('MASTER', 'ADMIN', 'COORDINATOR', 'RESPONSIBLE', 'VIEWER');
+CREATE TYPE "UserRole" AS ENUM ('master', 'admin', 'coordinator', 'responsible', 'viewer');
 
 -- CreateEnum
 CREATE TYPE "SheetStatus" AS ENUM ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED');
@@ -24,7 +24,7 @@ ADD COLUMN     "status" "SheetStatus" NOT NULL DEFAULT 'DRAFT';
 -- AlterTable
 ALTER TABLE "users" ADD COLUMN     "is_active" BOOLEAN NOT NULL DEFAULT true,
 DROP COLUMN "role",
-ADD COLUMN     "role" "UserRole" NOT NULL DEFAULT 'VIEWER';
+ADD COLUMN     "role" "UserRole" NOT NULL DEFAULT 'viewer';
 
 -- CreateTable
 CREATE TABLE "salary_floors" (

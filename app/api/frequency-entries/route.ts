@@ -36,14 +36,14 @@ export async function GET(request: Request) {
 
     // For non-master users, ensure they can only view entries in their organization
     if (
-      session.user.role !== "MASTER" &&
+      session.user.role !== "master" &&
       sheet.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     // For coordinators, ensure they can only view entries for their unit
-    if (session.user.role === "COORDINATOR") {
+    if (session.user.role === "coordinator") {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { unit_id: true },
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN", "COORDINATOR"].includes(session.user.role)) {
+    if (!["master", "admin", "coordinator"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -146,14 +146,14 @@ export async function POST(request: Request) {
 
     // For non-master users, ensure they can only create entries in their organization
     if (
-      session.user.role !== "MASTER" &&
+      session.user.role !== "master" &&
       sheet.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     // For coordinators, ensure they can only create entries for their unit
-    if (session.user.role === "COORDINATOR") {
+    if (session.user.role === "coordinator") {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { unit_id: true },
@@ -268,7 +268,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN", "COORDINATOR"].includes(session.user.role)) {
+    if (!["master", "admin", "coordinator"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -288,14 +288,14 @@ export async function PATCH(
 
     // For non-master users, ensure they can only update entries in their organization
     if (
-      session.user.role !== "MASTER" &&
+      session.user.role !== "master" &&
       entry.sheet.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     // For coordinators, ensure they can only update entries for their unit
-    if (session.user.role === "COORDINATOR") {
+    if (session.user.role === "coordinator") {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { unit_id: true },
@@ -394,7 +394,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN", "COORDINATOR"].includes(session.user.role)) {
+    if (!["master", "admin", "coordinator"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -414,14 +414,14 @@ export async function DELETE(
 
     // For non-master users, ensure they can only delete entries in their organization
     if (
-      session.user.role !== "MASTER" &&
+      session.user.role !== "master" &&
       entry.sheet.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
     // For coordinators, ensure they can only delete entries for their unit
-    if (session.user.role === "COORDINATOR") {
+    if (session.user.role === "coordinator") {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { unit_id: true },

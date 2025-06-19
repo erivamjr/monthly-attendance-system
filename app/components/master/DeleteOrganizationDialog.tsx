@@ -24,10 +24,12 @@ type Organization = {
 
 type DeleteOrganizationDialogProps = {
   organization: Organization;
+  onSuccess?: () => void;
 };
 
 export function DeleteOrganizationDialog({
   organization,
+  onSuccess,
 }: DeleteOrganizationDialogProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -53,6 +55,7 @@ export function DeleteOrganizationDialog({
       });
 
       setOpen(false);
+      if (onSuccess) onSuccess();
       router.refresh();
     } catch (error) {
       console.error("Erro ao excluir organização:", error);

@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
     // For non-master users, force their organization context
     let queryOrgId = organizationId;
-    if (session.user.role === "MASTER") {
+    if (session.user.role === "master") {
       if (organizationId) {
         queryOrgId = organizationId;
       }
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
 
     // For non-master users, ensure they can only create users in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -152,15 +152,12 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password || "changeme123", 10);
 
-    // Converta o role para maiúsculo para compatibilidade com o enum do Prisma
-    const prismaRole = role.toUpperCase();
-
     const user = await prisma.user.create({
       data: {
         name,
         email,
         cpf,
-        role: prismaRole,
+        role,
         organization_id,
         unit_id: unit_id || null,
         password: hashedPassword,
@@ -223,7 +220,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -240,7 +237,7 @@ export async function PATCH(
 
     // For non-master users, ensure they can only update users in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       user.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -337,7 +334,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    if (!["MASTER", "ADMIN"].includes(session.user.role)) {
+    if (!["master", "admin"].includes(session.user.role)) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
@@ -361,7 +358,7 @@ export async function DELETE(
 
     // For non-master users, ensure they can only delete users in their organization
     if (
-      session.user.role === "ADMIN" &&
+      session.user.role === "admin" &&
       user.organization_id !== session.user.organizationId
     ) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });

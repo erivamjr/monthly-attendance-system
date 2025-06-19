@@ -28,51 +28,59 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/config", request.url));
   }
 
-  // Public routes
+  // Public routes for login/unauthorized pages
   if (pathname === "/login" || pathname === "/unauthorized") {
     if (token) {
-      // If user is already logged in, redirect to their organization's dashboard
-      if (token.role === "MASTER") {
-        return NextResponse.redirect(new URL("/dashboard/master", request.url));
-      }
+      // If user is already logged in, redirect to their designated dashboard
+      const targetSlug =
+        token.role === "master" ? "master" : token.organizationSlug;
       return NextResponse.redirect(
-        new URL(`/${token.organizationSlug}/dashboard`, request.url)
+        new URL(`/${targetSlug}/dashboard`, request.url)
       );
     }
     return NextResponse.next();
   }
 
-  // Protected routes
+  // Protected routes: if no token, redirect to login
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Master routes
-  if (pathname.startsWith("/dashboard/master")) {
-    if (token.role !== "MASTER") {
+  // Extract organization slug from the URL path
+  const pathSegments = pathname.split("/");
+  const organizationSlugFromPath = pathSegments[1];
+
+  // If there's no organization slug in the path (e.g., /dashboard instead of /saude/dashboard)
+  // Or if the path is not part of a valid dashboard structure, redirect to unauthorized
+  if (
+    !organizationSlugFromPath ||
+    !pathname.startsWith(`/${organizationSlugFromPath}/dashboard`)
+  ) {
+    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  }
+
+  // Enforce correct slug based on user role
+  if (token.role === "master") {
+    // Master users should only access the "master" slug
+    if (organizationSlugFromPath !== "master") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
-    return NextResponse.next();
+  } else {
+    // Non-master users must access their own organization slug
+    if (organizationSlugFromPath !== token.organizationSlug) {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
   }
 
-  // Organization routes
-  const organizationSlug = pathname.split("/")[1];
-  if (!organizationSlug) {
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
-  }
+  // Role-based access control for specific routes within a dashboard
+  const baseDashboardPath = `/${organizationSlugFromPath}/dashboard`;
 
-  // Check if user has access to this organization
-  if (token.role !== "MASTER" && token.organizationSlug !== organizationSlug) {
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
-  }
-
-  // Role-based access control for specific routes
-  const isAdmin = token.role === "ADMIN";
-  const isMaster = token.role === "MASTER";
-  const isResponsible = token.role === "RESPONSIBLE";
+  const isAdmin = token.role === "admin";
+  const isMaster = token.role === "master";
+  const isResponsible = token.role === "responsible";
 
   // Routes that require master access
-  if (pathname.includes("/organizations")) {
+  if (pathname.startsWith(`${baseDashboardPath}/organizations`)) {
     if (!isMaster) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
@@ -80,11 +88,12 @@ export async function middleware(request: NextRequest) {
 
   // Routes that require admin or master access
   if (
-    pathname.includes("/units") ||
-    pathname.includes("/users") ||
-    pathname.includes("/employees") ||
-    pathname.includes("/salary-floor") ||
-    pathname.includes("/export")
+    pathname.startsWith(`${baseDashboardPath}/units`) ||
+    pathname.startsWith(`${baseDashboardPath}/users`) ||
+    pathname.startsWith(`${baseDashboardPath}/employees`) ||
+    pathname.startsWith(`${baseDashboardPath}/salary-floor`) ||
+    pathname.startsWith(`${baseDashboardPath}/exports`) ||
+    pathname.startsWith(`${baseDashboardPath}/settings`)
   ) {
     if (!isAdmin && !isMaster) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
@@ -92,15 +101,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // Routes that require admin, responsible, or master access
-  if (pathname.includes("/sheets") || pathname.includes("/reports")) {
+  if (
+    pathname.startsWith(`${baseDashboardPath}/sheets`) ||
+    pathname.startsWith(`${baseDashboardPath}/reports`) ||
+    pathname.startsWith(`${baseDashboardPath}/frequency`) ||
+    pathname.startsWith(`${baseDashboardPath}/attendances`)
+  ) {
     if (!isAdmin && !isMaster && !isResponsible) {
-      return NextResponse.redirect(new URL("/unauthorized", request.url));
-    }
-  }
-
-  // Routes that require admin or master access
-  if (pathname.includes("/settings")) {
-    if (!isAdmin && !isMaster) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }

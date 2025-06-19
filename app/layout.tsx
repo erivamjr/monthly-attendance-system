@@ -5,7 +5,7 @@ import { AuthProvider } from "./components/auth-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 
 // Importar estilos globais
-import "../globals.css";
+import "@/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

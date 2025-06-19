@@ -8,8 +8,8 @@ async function main() {
     // Criar organização padrão
     const organization = await prisma.organization.create({
       data: {
-        name: "Organização Padrão",
-        slug: "org-padrao",
+        name: "Master",
+        slug: "master",
       },
     });
 
@@ -30,7 +30,7 @@ async function main() {
         email: "admin@example.com",
         password: hashedPassword,
         cpf: "123.456.789-00",
-        role: "MASTER",
+        role: "master",
         organization_id: organization.id,
       },
     });
