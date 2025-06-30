@@ -91,3 +91,46 @@ export async function PUT(
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { employeeId: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return new NextResponse("Não autorizado", { status: 401 });
+    }
+
+    // Verifica se o servidor existe
+    const existingEmployee = await prisma.employee.findUnique({
+      where: { id: params.employeeId },
+      include: {
+        unit: true,
+      },
+    });
+
+    if (!existingEmployee) {
+      return new NextResponse("Servidor não encontrado", { status: 404 });
+    }
+
+    // Se não for master, verifica se o servidor pertence à organização do usuário
+    if (session.user.role !== "master") {
+      if (
+        existingEmployee.unit.organization_id !== session.user.organizationId
+      ) {
+        return new NextResponse("Não autorizado", { status: 401 });
+      }
+    }
+
+    await prisma.employee.delete({
+      where: { id: params.employeeId },
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("[EMPLOYEE_DELETE]", error);
+    return new NextResponse("Erro interno do servidor", { status: 500 });
+  }
+}

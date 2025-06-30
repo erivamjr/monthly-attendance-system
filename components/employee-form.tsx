@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 const employeeSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -68,6 +69,7 @@ export function EmployeeForm({
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { data: session } = useSession();
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: employee || {
@@ -79,12 +81,16 @@ export function EmployeeForm({
     },
   });
 
+  useEffect(() => {
+    if (open) loadUnits();
+  }, [open]);
+
   const loadUnits = async () => {
     try {
       const response = await fetch("/api/units");
       if (!response.ok) throw new Error("Erro ao carregar unidades");
       const data = await response.json();
-      setUnits(data);
+      setUnits(data.units || []);
     } catch (error) {
       console.error("Erro ao carregar unidades:", error);
       toast({
@@ -96,17 +102,18 @@ export function EmployeeForm({
   };
 
   const onSubmit = async (data: EmployeeFormData) => {
+    console.log("CONSOLE EMPLOYEE= ", data);
     setLoading(true);
     try {
       const url = employee ? `/api/employees/${employee.id}` : "/api/employees";
       const method = employee ? "PUT" : "POST";
-
+      const organization_id = session?.user.organizationId;
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, organization_id }),
       });
 
       if (!response.ok) {
@@ -250,10 +257,10 @@ export function EmployeeForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="CLT">CLT</SelectItem>
-                      <SelectItem value="PJ">PJ</SelectItem>
-                      <SelectItem value="Temporário">Temporário</SelectItem>
-                      <SelectItem value="Estágio">Estágio</SelectItem>
+                      <SelectItem value="CELETISTA">Celetista</SelectItem>
+                      <SelectItem value="SP">Serviços Prestados</SelectItem>
+                      <SelectItem value="TEMPORARIO">Temporário</SelectItem>
+                      <SelectItem value="EFETIVO">Efetivo</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

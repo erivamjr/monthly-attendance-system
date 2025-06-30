@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -25,6 +25,11 @@ type Employee = {
     name: string;
   };
   is_active: boolean;
+  cpf?: string;
+  rg?: string;
+  rg_state?: string;
+  contract_type?: string;
+  address?: string;
 };
 
 export default function EmployeesPage() {
@@ -66,6 +71,24 @@ export default function EmployeesPage() {
     setShowForm(true);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja deletar este servidor?")) return;
+    try {
+      const response = await fetch(`/api/employees/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Erro ao deletar servidor");
+      toast({ title: "Sucesso", description: "Servidor deletado com sucesso" });
+      loadEmployees();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar o servidor",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -105,7 +128,6 @@ export default function EmployeesPage() {
               <TableHead>Matrícula</TableHead>
               <TableHead>Cargo</TableHead>
               <TableHead>Unidade</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -117,27 +139,27 @@ export default function EmployeesPage() {
                   <TableCell>{employee.registration}</TableCell>
                   <TableCell>{employee.position}</TableCell>
                   <TableCell>{employee.unit.name}</TableCell>
-                  <TableCell>
-                    {employee.is_active ? (
-                      <span className="text-green-600">Ativo</span>
-                    ) : (
-                      <span className="text-red-600">Inativo</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="flex gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(employee)}
                     >
-                      Editar
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(employee.id)}
+                    >
+                      <Trash className="h-4 w-4 text-red-600" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center">
+                <TableCell colSpan={5} className="text-center">
                   Nenhum servidor encontrado
                 </TableCell>
               </TableRow>
@@ -152,7 +174,23 @@ export default function EmployeesPage() {
           setShowForm(open);
           if (!open) setSelectedEmployee(undefined);
         }}
-        employee={selectedEmployee}
+        employee={
+          selectedEmployee
+            ? {
+                id: selectedEmployee.id,
+                name: selectedEmployee.name,
+                registration: selectedEmployee.registration,
+                position: selectedEmployee.position,
+                cpf: selectedEmployee.cpf ?? "",
+                rg: selectedEmployee.rg ?? "",
+                rg_state: selectedEmployee.rg_state ?? "",
+                contract_type: selectedEmployee.contract_type ?? "",
+                address: selectedEmployee.address ?? "",
+                unit_id: selectedEmployee.unit_id,
+                is_active: selectedEmployee.is_active,
+              }
+            : undefined
+        }
         onSuccess={() => {
           loadEmployees();
         }}
